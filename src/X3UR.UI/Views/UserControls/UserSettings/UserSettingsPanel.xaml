@@ -9,30 +9,23 @@
              Height="Auto" Width="Auto">
     <Grid>
         <Grid.RowDefinitions>
-            <!-- 1. SeedControl: feste Höhe (Auto → SeedControl.Height) -->
             <RowDefinition Height="Auto"/>
-            <!-- 2. SettingsTabControl: füllt Resthöhe -->
             <RowDefinition Height="*"/>
-            <!-- 3. SaveLoadControl: feste Höhe 24px -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <!-- eine Spalte, gesamte Breite -->
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- 1. SeedControl ganz oben -->
         <local:SeedControl Grid.Row="0"
                      Height="24"
                      HorizontalAlignment="Stretch"
                      VerticalAlignment="Top"/>
 
-        <!-- 2. SettingsTabControl in der Mitte -->
         <settingsTabs:SettingsTabControl Grid.Row="1"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"/>
 
-        <!-- 3. SaveLoadControl ganz unten -->
         <local:SaveLoadControl Grid.Row="2"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Bottom"/>
