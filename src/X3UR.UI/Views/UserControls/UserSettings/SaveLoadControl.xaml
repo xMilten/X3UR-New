@@ -5,8 +5,21 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
-    </Grid>
+             Height="24" Width="Auto">
+    <StackPanel Orientation="Horizontal"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Margin="0,0,5,0">
+        <Label Content="Einstellungen verwalten:"
+               Padding="5,0"
+               VerticalContentAlignment="Center"
+               Height="24" />
+        <Button Content="Laden"
+            Width="60"
+            Height="24"
+            Margin="0,0,5,0"/>
+        <Button Content="Speichern"
+            Width="60"
+            Height="24"/>
+    </StackPanel>
 </UserControl>
