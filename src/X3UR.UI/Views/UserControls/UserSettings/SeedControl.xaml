@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
              mc:Ignorable="d" 
-             Width="Auto" Height="30">
+             Width="Auto" Height="24">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -24,11 +24,12 @@
         <TextBox Grid.Row="0" Grid.Column="1"
                  VerticalAlignment="Stretch"
                  HorizontalAlignment="Stretch"
-                 Margin="5,0" />
+                 Margin="5,0"
+                 VerticalContentAlignment="Center"/>
 
         <Button Grid.Row="0" Grid.Column="2"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Right"
-                Width="30"/>
+                Width="24"/>
     </Grid>
 </UserControl>
