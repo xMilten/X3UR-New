@@ -7,7 +7,10 @@
         xmlns:userSettings="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
         xmlns:visualUniverse="clr-namespace:X3UR.UI.Views.UserControls.VisualUniverse"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="X3 - Universe Ranomizer"
+        Height="1030"
+        Width="1916"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3*" />

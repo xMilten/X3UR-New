@@ -17,17 +17,8 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <local:SeedControl Grid.Row="0"
-                     Height="24"
-                     HorizontalAlignment="Stretch"
-                     VerticalAlignment="Top"/>
-
-        <settingsTabs:SettingsTabControl Grid.Row="1"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"/>
-
-        <local:SaveLoadControl Grid.Row="2"
-                         HorizontalAlignment="Stretch"
-                         VerticalAlignment="Bottom"/>
+        <local:SeedControl Grid.Row="0" Height="24" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="2" />
+        <settingsTabs:SettingsTabControl Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2" />
+        <local:SaveLoadControl Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="2" />
     </Grid>
 </UserControl>
