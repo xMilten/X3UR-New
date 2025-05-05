@@ -3,115 +3,165 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:X3UR.UI.Views.UserControls.UserSettings.SettingsTabs"
              xmlns:viewModel="clr-namespace:X3UR.UI.ViewModels.UserSettings.SettingsTab"
-             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance viewModel:UniverseSettingsTabViewModel}"
+             mc:Ignorable="d"
              Height="Auto" Width="Auto">
+
+    <UserControl.Resources>
+        <!-- Allgemeines Label-Style für Tabellen-Header -->
+        <Style x:Key="HeaderLabelStyle" TargetType="Label">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <!-- Label-Style für Eingabe-Beschriftungen (links) -->
+        <Style x:Key="FormLabelStyle" TargetType="Label">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <!-- Slider-Style mit einheitlichem TickPlacement und Margin -->
+        <Style x:Key="UniformSliderStyle" TargetType="Slider">
+            <Setter Property="TickPlacement" Value="BottomRight"/>
+            <Setter Property="TickFrequency" Value="1"/>
+            <Setter Property="IsSnapToTickEnabled" Value="True"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="2,0"/>
+        </Style>
+
+        <!-- TextBox-Style für numeric inputs -->
+        <Style x:Key="NumericTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="2,2"/>
+        </Style>
+
+        <!-- Container-Style für jede Zeile im ItemsControl -->
+        <Style x:Key="ItemRowContainerStyle" TargetType="ContentPresenter">
+            <Setter Property="Margin" Value="1"/>
+        </Style>
+    </UserControl.Resources>
+
     <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalAlignment="Stretch"
-                  VerticalAlignment="Stretch">
-        <Grid>
+                VerticalScrollBarVisibility="Auto">
+        <Grid Margin="2">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" /> <!-- Map-Einstellungen -->
-                <RowDefinition Height="*" />    <!-- Rassentabelle -->
-                <RowDefinition Height="Auto" /> <!-- Gesamtstatistik -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            
+
             <!-- Map-Einstellungen -->
-            <Grid Grid.Row="0" Margin="2">
+            <Grid Grid.Row="0" Margin="0,0,0,10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="50" />
-                    <ColumnDefinition Width="*" MinWidth="100" />
-                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="*" MinWidth="100"/>
+                    <ColumnDefinition Width="40"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <!-- Karte -->
-                <Label Grid.Row="0" Grid.Column="0" Content="Karte" FontWeight="Bold" VerticalContentAlignment="Center" HorizontalContentAlignment="Left" />
-                <Label Grid.Row="0" Grid.Column="1" Content="Anzahl der möglichen Sektoren:" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" />
-                <Label Grid.Row="0" Grid.Column="2" Content="{Binding TotalSectorCount}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
+                <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Karte"/>
+                <Label Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Content="Anzahl der möglichen Sektoren:"/>
+                <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="{Binding TotalSectorCount}"/>
 
                 <!-- Breite -->
-                <Label Grid.Row="1" Grid.Column="0" Content="Breite" FontWeight="Bold" VerticalContentAlignment="Center" HorizontalContentAlignment="Left" />
-                <Slider Grid.Row="1" Grid.Column="1" Minimum="{Binding MinWidth}" Maximum="{Binding MaxWidth}" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Width, Mode=TwoWay}" VerticalAlignment="Center" />
-                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="2" />
+                <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Breite"/>
+                <Slider Grid.Row="1" Grid.Column="1" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinWidth}" Maximum="{Binding MaxWidth}" Value="{Binding Width, Mode=TwoWay}"/>
+                <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <!-- Höhe -->
-                <Label Grid.Row="2" Grid.Column="0" Content="Höhe" FontWeight="Bold" VerticalContentAlignment="Center" HorizontalContentAlignment="Left" />
-                <Slider Grid.Row="2" Grid.Column="1" Minimum="{Binding MinHeight}" Maximum="{Binding MaxHeight}" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Height, Mode=TwoWay}" VerticalAlignment="Center" />
-                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Margin="2" />
+                <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Höhe"/>
+                <Slider Grid.Row="2" Grid.Column="1" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinHeight}" Maximum="{Binding MaxHeight}" Value="{Binding Height, Mode=TwoWay}"/>
+                <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </Grid>
+
+            <!-- Header der Rassentabelle -->
+            <Grid Grid.Row="1" Margin="0,0,0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="2.7*"/>
+                    <ColumnDefinition Width="2.5*"/>
+                    <ColumnDefinition Width="2.5*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Style="{StaticResource HeaderLabelStyle}" Content="Rasse"/>
+                <Label Grid.Column="1" Style="{StaticResource HeaderLabelStyle}" Content="Größe"/>
+                <Label Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="Cluster-Anz."/>
+                <Label Grid.Column="3" Style="{StaticResource HeaderLabelStyle}" Content="Cluster-Grö."/>
             </Grid>
 
             <!-- Rassentabelle -->
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="30" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="110" />
-                    <ColumnDefinition Width="2.7*" />
-                    <ColumnDefinition Width="2.5*" />
-                    <ColumnDefinition Width="2.5*" />
-                </Grid.ColumnDefinitions>
-                
-                <!-- Header -->
-                <Label Grid.Row="0" Grid.Column="0" Content="Rasse" FontWeight="Bold" />
-                <Label Grid.Row="0" Grid.Column="1" Content="Größe" FontWeight="Bold" />
-                <Label Grid.Row="0" Grid.Column="2" Content="Cluster-Anz." FontWeight="Bold" />
-                <Label Grid.Row="0" Grid.Column="3" Content="Cluster-Grö." FontWeight="Bold" />
+            <ItemsControl Grid.Row="2"
+                    ItemsSource="{Binding RaceSettings}"
+                    ItemContainerStyle="{StaticResource ItemRowContainerStyle}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="30">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="2.7*"/>
+                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="2.5*"/>
+                            </Grid.ColumnDefinitions>
 
-                <!-- Datenzeilen per ItemsControl -->
-                <ItemsControl Grid.Row="1" Grid.RowSpan="11" ItemsSource="{Binding RaceSettings}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Grid Margin="1">
+                            <!-- Spalte 1 -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="1">
+                                <CheckBox IsChecked="{Binding IsActive}" VerticalAlignment="Center"/>
+                                <Rectangle Width="20" Height="20" Fill="{Binding Color}" Margin="2,0" VerticalAlignment="Center"/>
+                                <Label Content="{Binding Name}" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Spalte 2 -->
+                            <Grid Grid.Column="1">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="110"/>
-                                    <ColumnDefinition Width="2.7*"/>
-                                    <ColumnDefinition Width="2.5*"/>
-                                    <ColumnDefinition Width="2.5*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <!-- Spalte 1: Checkbox, Farbquadrat, Name -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                    <CheckBox IsChecked="{Binding IsActive}"/>
-                                    <Rectangle Width="24" Height="24" Fill="{Binding Color}" Margin="2,0"/>
-                                    <Label Content="{Binding Name}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <!-- Spalte 2: Size Slider + Eingabe + Anteil -->
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Slider Width="100" Minimum="1" Maximum="{Binding MaxSize}" Value="{Binding MaxSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                    <TextBox Width="40" Text="{Binding MaxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="2,0"/>
-                                    <Label Content="{Binding SizePercentage, StringFormat=P0}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <!-- Spalte 3: ClusterCount -->
-                                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                    <Slider Width="100" Minimum="1" Maximum="{Binding MaxClusters}" Value="{Binding MaxClusters, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                    <TextBox Width="40" Text="{Binding MaxClusters, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="2,0"/>
-                                </StackPanel>
-                                <!-- Spalte 4: ClusterSize -->
-                                <StackPanel Grid.Column="3" Orientation="Horizontal">
-                                    <Slider Width="100" Minimum="1" Maximum="{Binding MaxClusterSize}" Value="{Binding MaxClusterSize, Mode=TwoWay}" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                                    <TextBox Width="40" Text="{Binding MaxClusterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="2,0"/>
-                                </StackPanel>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxSize}" Value="{Binding MaxSize, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Grid>
+
+                            <!-- Spalte 3 -->
+                            <Grid Grid.Column="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxClusters}" Value="{Binding MaxClusters, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxClusters, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+                            <!-- Spalte 4 -->
+                            <Grid Grid.Column="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxClusterSize}" Value="{Binding MaxClusterSize, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxClusterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <!-- Gesamtstatistik -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left">
-                <Label Content="Sektoren insgesamt:" />
-                <Label Content="{Binding TotalRaceSize}" />
-                <Label Content="{Binding RaceSizePercentage, StringFormat=P0}"/>
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="2">
+                <Label Content="Sektoren insgesamt:" Margin="2"/>
+                <Label Content="{Binding TotalRaceSize}" Margin="2"/>
+                <Label Content="{Binding RaceSizePercentage}" ContentStringFormat="P2" Margin="2"/>
             </StackPanel>
-            
         </Grid>
     </ScrollViewer>
 </UserControl>

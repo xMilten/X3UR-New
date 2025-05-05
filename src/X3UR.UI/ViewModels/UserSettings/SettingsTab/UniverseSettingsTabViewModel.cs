@@ -29,16 +29,16 @@ public class UniverseSettingsTabViewModel : INotifyPropertyChanged {
     public double RaceSizePercentage =>
         TotalSectorCount > 0 ? (double)TotalRaceSize / TotalSectorCount : 0;
 
-    public ObservableCollection<RaceSettingModel> RaceSettings { get; } = new(
-        RaceDefinitions.All.Select(def => new RaceSettingModel {
+    public ObservableCollection<RaceSettingModel> RaceSettings { get; } = [.. RaceDefinitions.All.Select(
+        def => new RaceSettingModel {
             Name = def.Name,
             Color = new SolidColorBrush(def.Color),
             MaxSize = def.DefaultSize,
             MaxClusters = def.DefaultClusters,
             MaxClusterSize = def.DefaultClusterSize,
             IsActive = def.IsDefaultActive
-        })
-    );
+        }
+    )];
 
     private void UpdateTotal() {
         OnPropertyChanged(nameof(TotalSectorCount));

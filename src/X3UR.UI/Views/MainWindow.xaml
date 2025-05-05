@@ -17,7 +17,7 @@
             <ColumnDefinition Width="7*" />
         </Grid.ColumnDefinitions>
 
-        <userSettings:UserSettingsPanel Grid.Column="0" />
+        <userSettings:UserSettingsPanel Grid.Column="0" DataContext="{Binding SettingsVm}" />
         <visualUniverse:VisualUniversePanel Grid.Column="1" />
     </Grid>
 </Window>
