@@ -9,13 +9,21 @@ public class UniverseSettingsTabViewModel : INotifyPropertyChanged {
     private int _width = 22;
     public int Width {
         get => _width;
-        set { _width = value; OnPropertyChanged(); UpdateTotal(); }
+        set {
+            _width = value;
+            OnPropertyChanged();
+            UpdateTotal();
+        }
     }
 
     private int _height = 17;
     public int Height {
         get => _height;
-        set { _height = value; OnPropertyChanged(); UpdateTotal(); }
+        set {
+            _height = value;
+            OnPropertyChanged();
+            UpdateTotal();
+        }
     }
 
     public int MinWidth { get; } = 5;
@@ -26,24 +34,54 @@ public class UniverseSettingsTabViewModel : INotifyPropertyChanged {
     public int TotalSectorCount => Width * Height;
 
     public int TotalRaceSize => RaceSettings.Sum(r => r.MaxSize);
-    public double RaceSizePercentage =>
-        TotalSectorCount > 0 ? (double)TotalRaceSize / TotalSectorCount : 0;
+    public double RaceSizePercentage => TotalSectorCount > 0 ? (double)TotalRaceSize / TotalSectorCount : 0;
 
-    public ObservableCollection<RaceSettingModel> RaceSettings { get; } = [.. RaceDefinitions.All.Select(
-        def => new RaceSettingModel {
-            Name = def.Name,
-            Color = new SolidColorBrush(def.Color),
-            MaxSize = def.DefaultSize,
-            MaxClusters = def.DefaultClusters,
-            MaxClusterSize = def.DefaultClusterSize,
-            IsActive = def.IsDefaultActive
+    public ObservableCollection<RaceSettingModel> RaceSettings { get; }
+
+    public UniverseSettingsTabViewModel() {
+        RaceSettings = new ObservableCollection<RaceSettingModel>(
+            RaceDefinitions.All.Select(definition => {
+                RaceSettingModel model = new() {
+                    Name = definition.Name,
+                    Color = new SolidColorBrush(definition.Color),
+                    MaxSize = definition.DefaultSize,
+                    MaxClusters = definition.DefaultClusters,
+                    MaxClusterSize = definition.DefaultClusterSize,
+                    IsActive = definition.IsDefaultActive
+                };
+
+                model.PropertyChanged += RaceModel_PropertyChanged;
+                return model;
+            })
+        );
+
+        RaceSettings.CollectionChanged += (s, e) => UpdateAllDerived();
+        UpdateAllDerived();
+    }
+
+    private void RaceModel_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+        // Wenn MaxSize sich ändert, neu berechnen
+        if (e.PropertyName == nameof(RaceSettingModel.MaxSize)) {
+            var model = (RaceSettingModel)sender;
+            model.UpdateDerived(TotalSectorCount);
+            // Gesamtstatistik anpassen
+            OnPropertyChanged(nameof(TotalRaceSize));
+            OnPropertyChanged(nameof(RaceSizePercentage));
         }
-    )];
+    }
 
     private void UpdateTotal() {
         OnPropertyChanged(nameof(TotalSectorCount));
         OnPropertyChanged(nameof(TotalRaceSize));
         OnPropertyChanged(nameof(RaceSizePercentage));
+        UpdateAllDerived();
+    }
+
+    private void UpdateAllDerived() {
+        int total = TotalSectorCount;
+
+        foreach (var race in RaceSettings)
+            race.UpdateDerived(total);
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

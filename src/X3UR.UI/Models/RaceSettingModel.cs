@@ -23,7 +23,6 @@ public class RaceSettingModel : INotifyPropertyChanged {
         set {
             _maxSize = value;
             OnPropertyChanged();
-            UpdateDerived();
         }
     }
 
@@ -33,7 +32,6 @@ public class RaceSettingModel : INotifyPropertyChanged {
         set {
             _maxClusters = value;
             OnPropertyChanged();
-            UpdateDerived();
         }
     }
 
@@ -43,14 +41,20 @@ public class RaceSettingModel : INotifyPropertyChanged {
         set {
             _maxClusterSize = value;
             OnPropertyChanged();
-            UpdateDerived();
         }
     }
 
-    // Für Prozent-Anteile
-    public double SizePercentage { get; private set; }
-    public void UpdateDerived() {
-        // Beispiel: berechne anhand Gesamtsize im Parent-VM später
+    private double _sizePercentage;
+    public double SizePercentage {
+        get => _sizePercentage;
+        private set {
+            _sizePercentage = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public void UpdateDerived(int totalSectors) {
+        SizePercentage = totalSectors > 0 ? (double)MaxSize / totalSectors : 0;
         OnPropertyChanged(nameof(SizePercentage));
     }
 

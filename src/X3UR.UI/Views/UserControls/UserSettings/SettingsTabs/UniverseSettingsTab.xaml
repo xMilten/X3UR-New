@@ -102,9 +102,7 @@
             </Grid>
 
             <!-- Rassentabelle -->
-            <ItemsControl Grid.Row="2"
-                    ItemsSource="{Binding RaceSettings}"
-                    ItemContainerStyle="{StaticResource ItemRowContainerStyle}">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="30">
@@ -127,9 +125,11 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxSize}" Value="{Binding MaxSize, Mode=TwoWay}"/>
                                 <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Label Grid.Column="2" Content="{Binding SizePercentage}" ContentStringFormat="P2" VerticalAlignment="Center"/>
                             </Grid>
 
                             <!-- Spalte 3 -->
