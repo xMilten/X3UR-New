@@ -108,9 +108,9 @@
                         <Grid Height="30">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="110"/>
-                                <ColumnDefinition Width="2.7*"/>
-                                <ColumnDefinition Width="2.5*"/>
-                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="3*"/>
+                                <ColumnDefinition Width="2.3*"/>
+                                <ColumnDefinition Width="2.3*"/>
                             </Grid.ColumnDefinitions>
 
                             <!-- Spalte 1 -->
@@ -127,8 +127,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxSize}" Value="{Binding MaxSize, Mode=TwoWay}"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxSize}" Value="{Binding CurrentSize, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding CurrentSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Label Grid.Column="2" Content="{Binding SizePercentage}" ContentStringFormat="P2" VerticalAlignment="Center"/>
                             </Grid>
 
@@ -138,8 +138,8 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxClusters}" Value="{Binding MaxClusters, Mode=TwoWay}"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxClusters, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinClusters}" Maximum="{Binding MaxClusters}" Value="{Binding CurrentClusters, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding CurrentClusters, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
 
                             <!-- Spalte 4 -->
@@ -148,8 +148,8 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxClusterSize}" Value="{Binding MaxClusterSize, Mode=TwoWay}"/>
-                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding MaxClusterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinClusterSize}" Maximum="{Binding MaxClusterSize}" Value="{Binding CurrentClusterSize, Mode=TwoWay}"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding CurrentClusterSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                             </Grid>
                         </Grid>
                     </DataTemplate>

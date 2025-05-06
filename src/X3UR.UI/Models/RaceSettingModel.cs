@@ -3,62 +3,121 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using X3UR.Domain.Enums;
 
-namespace X3UR.UI.Models;
-public class RaceSettingModel : INotifyPropertyChanged {
-    public RaceNames Name { get; set; }
-    public Brush Color { get; set; }
+namespace X3UR.UI.Models {
+    public class RaceSettingModel : INotifyPropertyChanged {
+        public RaceNames Name { get; set; }
+        public Brush Color { get; set; }
 
-    private bool _isActive;
-    public bool IsActive {
-        get => _isActive;
-        set {
-            _isActive = value;
-            OnPropertyChanged();
+        private bool _isActive;
+        public bool IsActive {
+            get => _isActive;
+            set { _isActive = value; OnPropertyChanged(); }
         }
-    }
 
-    private int _maxSize;
-    public int MaxSize {
-        get => _maxSize;
-        set {
-            _maxSize = value;
-            OnPropertyChanged();
+        // aktuelle Größe
+        private short _currentSize;
+        public short CurrentSize {
+            get => _currentSize;
+            set {
+                short old = _currentSize;
+
+                _currentSize = value;
+                OnPropertyChanged();
+
+                // 1) Wenn wir gerade von 0 auf >0 wechseln, initialisiere Cluster & ClusterSize
+                if (old == 0 && _currentSize > 0) {
+                    CurrentClusters = 1;
+                    CurrentClusterSize = 1;
+                }
+                else if (CurrentClusters > _currentSize) {
+                    CurrentClusters = _currentSize;
+                }
+
+                // 2) Cluster-Size-Grenzen neu anpassen
+                OnPropertyChanged(nameof(MinClusters));
+                OnPropertyChanged(nameof(MaxClusters));
+                OnPropertyChanged(nameof(MinClusterSize));
+                OnPropertyChanged(nameof(MaxClusterSize));
+
+                // 3) Prozente neu berechnen
+                UpdateDerived(_totalSectors);
+            }
         }
-    }
 
-    private int _maxClusters;
-    public int MaxClusters {
-        get => _maxClusters;
-        set {
-            _maxClusters = value;
-            OnPropertyChanged();
+        // neues Slider-Maximum für CurrentSize
+        private short _maxSize;
+        public short MaxSize {
+            get => _maxSize;
+            internal set {
+                _maxSize = value;
+                OnPropertyChanged();
+            }
         }
-    }
 
-    private int _maxClusterSize;
-    public int MaxClusterSize {
-        get => _maxClusterSize;
-        set {
-            _maxClusterSize = value;
-            OnPropertyChanged();
+        // Cluster-Grenzen
+        public short MinClusters => (short)(CurrentSize > 0 ? 1 : 0);
+        public short MaxClusters => CurrentSize;
+
+        private short _currentClusters;
+        public short CurrentClusters {
+            get => _currentClusters;
+            set {
+                _currentClusters = value;
+                OnPropertyChanged();
+
+                // clamp CurrentClusterSize
+                if (CurrentClusterSize > MaxClusterSize)
+                    CurrentClusterSize = MaxClusterSize;
+
+                // Cluster-Size-Grenzen anpassen
+                OnPropertyChanged(nameof(MinClusterSize));
+                OnPropertyChanged(nameof(MaxClusterSize));
+
+                // Prozente neu berechnen
+                UpdateDerived(_totalSectors);
+
+                if (CurrentClusterSize > MaxClusterSize) {
+                    CurrentClusterSize = MaxClusterSize;
+                }
+            }
         }
-    }
 
-    private double _sizePercentage;
-    public double SizePercentage {
-        get => _sizePercentage;
-        private set {
-            _sizePercentage = value;
-            OnPropertyChanged();
+        public short MinClusterSize => (short)(CurrentSize > 0 ? 1 : 0);
+        public short MaxClusterSize {
+            get {
+                if (CurrentSize == 0)
+                    return 0;
+                return (short)Math.Max(0, CurrentSize - CurrentClusters + 1);
+            }
         }
-    }
 
-    public void UpdateDerived(int totalSectors) {
-        SizePercentage = totalSectors > 0 ? (double)MaxSize / totalSectors : 0;
-        OnPropertyChanged(nameof(SizePercentage));
-    }
+        private short _currentClusterSize;
+        public short CurrentClusterSize {
+            get => _currentClusterSize;
+            set {
+                short min = MinClusterSize;
+                short max = MaxClusterSize;
 
-    public event PropertyChangedEventHandler PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+                _currentClusterSize = Math.Max(min, Math.Min(max, value));
+                OnPropertyChanged(); }
+        }
+
+        // Prozent-Anteil
+        private float _sizePercentage;
+        public float SizePercentage {
+            get => _sizePercentage;
+            private set { _sizePercentage = value; OnPropertyChanged(); }
+        }
+
+        // Zwischenspeicher für TotalSectors
+        private short _totalSectors;
+        public void UpdateDerived(short totalSectors) {
+            _totalSectors = totalSectors;
+            SizePercentage = totalSectors > 0 ? (float)CurrentSize / totalSectors : 0;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
 }

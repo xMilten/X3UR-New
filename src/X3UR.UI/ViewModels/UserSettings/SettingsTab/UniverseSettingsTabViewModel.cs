@@ -4,87 +4,86 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media;
 using X3UR.UI.Models;
 
-namespace X3UR.UI.ViewModels.UserSettings.SettingsTab;
-public class UniverseSettingsTabViewModel : INotifyPropertyChanged {
-    private int _width = 22;
-    public int Width {
-        get => _width;
-        set {
-            _width = value;
-            OnPropertyChanged();
-            UpdateTotal();
+namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
+    public class UniverseSettingsTabViewModel : INotifyPropertyChanged {
+        private byte _width = 22;
+        public byte Width {
+            get => _width;
+            set { _width = value; OnPropertyChanged(); UpdateTotal(); }
         }
-    }
 
-    private int _height = 17;
-    public int Height {
-        get => _height;
-        set {
-            _height = value;
-            OnPropertyChanged();
-            UpdateTotal();
+        private byte _height = 17;
+        public byte Height {
+            get => _height;
+            set { _height = value; OnPropertyChanged(); UpdateTotal(); }
         }
-    }
 
-    public int MinWidth { get; } = 5;
-    public int MinHeight { get; } = 5;
-    public int MaxWidth { get; } = 24;
-    public int MaxHeight { get; } = 20;
+        public byte MinWidth { get; } = 5;
+        public byte MinHeight { get; } = 5;
+        public byte MaxWidth { get; } = 24;
+        public byte MaxHeight { get; } = 20;
 
-    public int TotalSectorCount => Width * Height;
+        public short TotalSectorCount => (short)(Width * Height);
 
-    public int TotalRaceSize => RaceSettings.Sum(r => r.MaxSize);
-    public double RaceSizePercentage => TotalSectorCount > 0 ? (double)TotalRaceSize / TotalSectorCount : 0;
+        // Summe aller vergebenen Sektoren
+        public short TotalRaceSize => (short)(RaceSettings.Sum(r => r.CurrentSize));
+        public float RaceSizePercentage =>
+            TotalSectorCount > 0 ? (float)TotalRaceSize / TotalSectorCount : 0;
 
-    public ObservableCollection<RaceSettingModel> RaceSettings { get; }
+        public ObservableCollection<RaceSettingModel> RaceSettings { get; }
 
-    public UniverseSettingsTabViewModel() {
-        RaceSettings = new ObservableCollection<RaceSettingModel>(
-            RaceDefinitions.All.Select(definition => {
-                RaceSettingModel model = new() {
-                    Name = definition.Name,
-                    Color = new SolidColorBrush(definition.Color),
-                    MaxSize = definition.DefaultSize,
-                    MaxClusters = definition.DefaultClusters,
-                    MaxClusterSize = definition.DefaultClusterSize,
-                    IsActive = definition.IsDefaultActive
-                };
+        public UniverseSettingsTabViewModel() {
+            RaceSettings = new ObservableCollection<RaceSettingModel>(
+                RaceDefinitions.All.Select(definition => {
+                    RaceSettingModel model = new() {
+                        Name = definition.Name,
+                        Color = new SolidColorBrush(definition.Color),
+                        CurrentSize = definition.DefaultSize,
+                        CurrentClusters = definition.DefaultClusters,
+                        CurrentClusterSize = definition.DefaultClusterSize,
+                        IsActive = definition.IsDefaultActive
+                    };
+                    model.PropertyChanged += RaceModel_PropertyChanged;
+                    return model;
+                })
+            );
 
-                model.PropertyChanged += RaceModel_PropertyChanged;
-                return model;
-            })
-        );
+            RaceSettings.CollectionChanged += (s, e) => UpdateAllDerived();
+            UpdateAllDerived();
+        }
 
-        RaceSettings.CollectionChanged += (s, e) => UpdateAllDerived();
-        UpdateAllDerived();
-    }
+        private void RaceModel_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            if (e.PropertyName == nameof(RaceSettingModel.CurrentSize) ||
+                e.PropertyName == nameof(RaceSettingModel.CurrentClusters)) {
+                UpdateTotal();
+            }
+        }
 
-    private void RaceModel_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-        // Wenn MaxSize sich ändert, neu berechnen
-        if (e.PropertyName == nameof(RaceSettingModel.MaxSize)) {
-            var model = (RaceSettingModel)sender;
-            model.UpdateDerived(TotalSectorCount);
-            // Gesamtstatistik anpassen
+        private void UpdateTotal() {
+            OnPropertyChanged(nameof(TotalSectorCount));
             OnPropertyChanged(nameof(TotalRaceSize));
             OnPropertyChanged(nameof(RaceSizePercentage));
+            UpdateAllDerived();
         }
+
+        private void UpdateAllDerived() {
+            short total = TotalSectorCount;
+            // 1) Prozent-Anteile aktualisieren
+            foreach (RaceSettingModel race in RaceSettings)
+                race.UpdateDerived(total);
+
+            // 2) Rest-Kontingent berechnen
+            short used = (short)RaceSettings.Sum(r => r.CurrentSize);
+            short remaining = (short)Math.Max(0, total - used);
+
+            // 3) MaxSize für jeden Slider setzen
+            foreach (RaceSettingModel race in RaceSettings) {
+                race.MaxSize = (short)(race.CurrentSize + remaining);
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
-
-    private void UpdateTotal() {
-        OnPropertyChanged(nameof(TotalSectorCount));
-        OnPropertyChanged(nameof(TotalRaceSize));
-        OnPropertyChanged(nameof(RaceSizePercentage));
-        UpdateAllDerived();
-    }
-
-    private void UpdateAllDerived() {
-        int total = TotalSectorCount;
-
-        foreach (var race in RaceSettings)
-            race.UpdateDerived(total);
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

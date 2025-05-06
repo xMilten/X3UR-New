@@ -25,8 +25,8 @@ public static class RaceDefinitions {
 public record RaceDefinition(
     RaceNames Name,
     Color Color,
-    int DefaultSize,
-    int DefaultClusters,
-    int DefaultClusterSize,
+    short DefaultSize,
+    short DefaultClusters,
+    short DefaultClusterSize,
     bool IsDefaultActive
 );
