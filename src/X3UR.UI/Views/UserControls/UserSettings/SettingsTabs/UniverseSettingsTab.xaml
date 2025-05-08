@@ -74,7 +74,7 @@
                 <!-- Karte -->
                 <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Karte"/>
                 <Label Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Content="Anzahl der möglichen Sektoren:"/>
-                <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="{Binding TotalSectorCount}"/>
+                <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="{Binding TotalSectorCount}" x:Name="TotalSectorCountLabel" AutomationProperties.AutomationId="TotalSectorCountLabel" />
 
                 <!-- Breite -->
                 <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Breite"/>
@@ -102,7 +102,7 @@
             </Grid>
 
             <!-- Rassentabelle -->
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}" x:Name="RaceSettingsItemsControl" AutomationProperties.AutomationId="RaceSettingsItemsControl">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="30">
@@ -129,7 +129,7 @@
                                 </Grid.ColumnDefinitions>
                                 <Slider Grid.Column="0" Style="{StaticResource UniformSliderStyle}" Minimum="0" Maximum="{Binding MaxSize}" Value="{Binding CurrentSize, Mode=TwoWay}"/>
                                 <TextBox Grid.Column="1" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding CurrentSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Label Grid.Column="2" Content="{Binding SizePercentage}" ContentStringFormat="P2" VerticalAlignment="Center"/>
+                                <Label Grid.Column="2" Content="{Binding SizePercentage}" ContentStringFormat="P2" VerticalAlignment="Center" />
                             </Grid>
 
                             <!-- Spalte 3 -->
@@ -159,8 +159,8 @@
             <!-- Gesamtstatistik -->
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="2">
                 <Label Content="Sektoren insgesamt:" Margin="2"/>
-                <Label Content="{Binding TotalRaceSize}" Margin="2"/>
-                <Label Content="{Binding RaceSizePercentage}" ContentStringFormat="P2" Margin="2"/>
+                <Label Content="{Binding TotalRaceSize}" Margin="2" />
+                <Label Content="{Binding RaceSizePercentage}" ContentStringFormat="P2" Margin="2" />
             </StackPanel>
         </Grid>
     </ScrollViewer>
