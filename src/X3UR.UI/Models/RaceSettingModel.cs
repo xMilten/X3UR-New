@@ -36,8 +36,6 @@ namespace X3UR.UI.Models {
                 // 2) Cluster-Size-Grenzen neu anpassen
                 OnPropertyChanged(nameof(MinClusters));
                 OnPropertyChanged(nameof(MaxClusters));
-                OnPropertyChanged(nameof(MinClusterSize));
-                OnPropertyChanged(nameof(MaxClusterSize));
 
                 // 3) Prozente neu berechnen
                 UpdateDerived(_totalSectors);
@@ -62,12 +60,11 @@ namespace X3UR.UI.Models {
         public short CurrentClusters {
             get => _currentClusters;
             set {
-                _currentClusters = value;
-                OnPropertyChanged();
+                short min = MinClusters;
+                short max = MaxClusters;
 
-                // clamp CurrentClusterSize
-                if (CurrentClusterSize > MaxClusterSize)
-                    CurrentClusterSize = MaxClusterSize;
+                _currentClusters = Math.Max(min, Math.Min(max, value));
+                OnPropertyChanged();
 
                 // Cluster-Size-Grenzen anpassen
                 OnPropertyChanged(nameof(MinClusterSize));
@@ -76,9 +73,10 @@ namespace X3UR.UI.Models {
                 // Prozente neu berechnen
                 UpdateDerived(_totalSectors);
 
-                if (CurrentClusterSize > MaxClusterSize) {
+                if (CurrentClusterSize > MaxClusterSize)
                     CurrentClusterSize = MaxClusterSize;
-                }
+                if (CurrentClusterSize > MaxClusterSize)
+                    CurrentClusterSize = MaxClusterSize;
             }
         }
 
@@ -99,7 +97,8 @@ namespace X3UR.UI.Models {
                 short max = MaxClusterSize;
 
                 _currentClusterSize = Math.Max(min, Math.Min(max, value));
-                OnPropertyChanged(); }
+                OnPropertyChanged();
+            }
         }
 
         // Prozent-Anteil

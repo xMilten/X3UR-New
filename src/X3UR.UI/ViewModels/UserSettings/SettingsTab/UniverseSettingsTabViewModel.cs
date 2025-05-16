@@ -1,8 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
 using X3UR.UI.Models;
 
@@ -12,12 +10,12 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
         public byte Width {
             get => _width;
             set {
-                var clamped = Math.Min(MaxWidth, Math.Max(MinWidth, value));
-                if (_width != clamped) {
-                    _width = value;
-                    OnPropertyChanged();
-                    UpdateTotal();
-                }
+                byte min = MinWidth;
+                byte max = MaxWidth;
+                _width = Math.Max(min, Math.Min(max, value));
+
+                OnPropertyChanged();
+                UpdateTotal();
             }
         }
 
@@ -25,12 +23,12 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
         public byte Height {
             get => _height;
             set {
-                var clamped = Math.Min(MaxHeight, Math.Max(MinHeight, value));
-                if (_height != clamped) {
-                    _height = value;
-                    OnPropertyChanged();
-                    UpdateTotal();
-                }
+                byte min = MinHeight;
+                byte max = MaxHeight;
+                _height = Math.Max(min, Math.Min(max, value));
+
+                OnPropertyChanged();
+                UpdateTotal();
             }
         }
 
@@ -97,16 +95,6 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
             // 3) MaxSize für jeden Slider setzen
             foreach (RaceSettingModel race in RaceSettings) {
                 race.MaxSize = (short)(race.CurrentSize + remaining);
-            }
-        }
-
-        private void WidthTextBox_TargetUpdated(object sender, DataTransferEventArgs e) {
-            if (sender is TextBox tb
-             && tb.DataContext is UniverseSettingsTabViewModel vm) {
-                var clamped = vm.Width.ToString();
-                if (tb.Text != clamped) {
-                    tb.Text = clamped;
-                }
             }
         }
     }

@@ -79,12 +79,12 @@
                 <!-- Breite -->
                 <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Breite"/>
                 <Slider Grid.Row="1" Grid.Column="1" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinWidth}" Maximum="{Binding MaxWidth}" Value="{Binding Width, Mode=TwoWay}"/>
-                <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnTargetUpdated=True}" TargetUpdated="TextBox_TargetUpdated"/>
+                <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <!-- Höhe -->
                 <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Höhe"/>
                 <Slider Grid.Row="2" Grid.Column="1" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinHeight}" Maximum="{Binding MaxHeight}" Value="{Binding Height, Mode=TwoWay}"/>
-                <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
 
             <!-- Header der Rassentabelle -->
@@ -102,7 +102,7 @@
             </Grid>
 
             <!-- Rassentabelle -->
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}" x:Name="RaceSettingsItemsControl" AutomationProperties.AutomationId="RaceSettingsItemsControl">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}" x:Name="RaceSettingsItemsControl" AutomationProperties.AutomationId="RaceSettingsItemsControl" Focusable="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="30">
