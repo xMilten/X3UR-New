@@ -6,7 +6,7 @@ using Xunit;
 
 using FlauiApp = FlaUI.Core.Application;
 
-namespace X3UR.UI.FlaUI.Tests;
+namespace X3UR.UI.FlaUI.Tests.UserSettings.SettingsTabs;
 public class UniverseSettingsTabFlaUITests : IDisposable {
     private readonly FlauiApp _app;
     private readonly AutomationBase _automation;

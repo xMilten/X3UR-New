@@ -9,13 +9,27 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
         private byte _width = 22;
         public byte Width {
             get => _width;
-            set { _width = value; OnPropertyChanged(); UpdateTotal(); }
+            set {
+                var clamped = Math.Min(MaxWidth, Math.Max(MinWidth, value));
+                if (_width != clamped) {
+                    _width = value;
+                    OnPropertyChanged();
+                    UpdateTotal();
+                }
+            }
         }
 
         private byte _height = 17;
         public byte Height {
             get => _height;
-            set { _height = value; OnPropertyChanged(); UpdateTotal(); }
+            set {
+                var clamped = Math.Min(MaxHeight, Math.Max(MinHeight, value));
+                if (_height != clamped) {
+                    _height = value;
+                    OnPropertyChanged();
+                    UpdateTotal();
+                }
+            }
         }
 
         public byte MinWidth { get; } = 5;
@@ -33,8 +47,7 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
         public ObservableCollection<RaceSettingModel> RaceSettings { get; }
 
         public UniverseSettingsTabViewModel() {
-            RaceSettings = new ObservableCollection<RaceSettingModel>(
-                RaceDefinitions.All.Select(definition => {
+            RaceSettings = [.. RaceDefinitions.All.Select(definition => {
                     RaceSettingModel model = new() {
                         Name = definition.Name,
                         Color = new SolidColorBrush(definition.Color),
@@ -45,8 +58,7 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
                     };
                     model.PropertyChanged += RaceModel_PropertyChanged;
                     return model;
-                })
-            );
+                })];
 
             RaceSettings.CollectionChanged += (s, e) => UpdateAllDerived();
             UpdateAllDerived();
