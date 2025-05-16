@@ -52,17 +52,17 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
 
         public UniverseSettingsTabViewModel() {
             RaceSettings = [.. RaceDefinitions.All.Select(definition => {
-                    RaceSettingModel model = new() {
-                        Name = definition.Name,
-                        Color = new SolidColorBrush(definition.Color),
-                        CurrentSize = definition.DefaultSize,
-                        CurrentClusters = definition.DefaultClusters,
-                        CurrentClusterSize = definition.DefaultClusterSize,
-                        IsActive = definition.IsDefaultActive
-                    };
-                    model.PropertyChanged += RaceModel_PropertyChanged;
-                    return model;
-                })];
+                RaceSettingModel model = new() {
+                    Name = definition.Name,
+                    Color = new SolidColorBrush(definition.Color),
+                    CurrentSize = definition.DefaultSize,
+                    CurrentClusters = definition.DefaultClusters,
+                    CurrentClusterSize = definition.DefaultClusterSize
+                };
+                model.IsActive = definition.IsDefaultActive;
+                model.PropertyChanged += RaceModel_PropertyChanged;
+                return model;
+            })];
 
             RaceSettings.CollectionChanged += (s, e) => UpdateAllDerived();
             UpdateAllDerived();
