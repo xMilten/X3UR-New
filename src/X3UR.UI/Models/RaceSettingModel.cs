@@ -8,10 +8,33 @@ namespace X3UR.UI.Models {
         public RaceNames Name { get; set; }
         public Brush Color { get; set; }
 
+        private short _currentSizeOld;
+        private short _currentClustersOld;
+        private short _currentClusterSizeOld;
+
         private bool _isActive;
         public bool IsActive {
             get => _isActive;
-            set { _isActive = value; OnPropertyChanged(); }
+            set {
+                if (_isActive != value) {
+                    _isActive = value;
+
+                    if (!_isActive) {
+                        _currentSizeOld = CurrentSize;
+                        _currentClustersOld = CurrentClusters;
+                        _currentClusterSizeOld = CurrentClusterSize;
+                        CurrentSize = 0;
+                        CurrentClusters = 0;
+                        CurrentClusterSize = 0;
+                    } else {
+                        CurrentSize = _currentSizeOld;
+                        CurrentClusters = _currentClustersOld;
+                        CurrentClusterSize = _currentClusterSizeOld;
+                    }
+
+                    OnPropertyChanged();
+                }
+            }
         }
 
         // aktuelle Größe
