@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\X3UR.UI\X3UR.UI.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="UserSettings\SettingsTabs\" />
+  </ItemGroup>
+
 </Project>

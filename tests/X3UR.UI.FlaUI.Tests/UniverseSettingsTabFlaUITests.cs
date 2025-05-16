@@ -1,10 +1,9 @@
-﻿using System.IO;
-using FlaUI.Core;
+﻿using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
-using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
 using X3UR.UI.FlaUI.Tests.Helpers;
 using Xunit;
+
 using FlauiApp = FlaUI.Core.Application;
 
 namespace X3UR.UI.FlaUI.Tests;
@@ -13,10 +12,9 @@ public class UniverseSettingsTabFlaUITests : IDisposable {
     private readonly AutomationBase _automation;
     private readonly Window _mainWindow;
 
-    private const string ExeRelativePath = @"..\..\..\..\..\src\X3UR.UI\bin\Debug\net8.0-windows7.0\X3UR.UI.exe";
-
     public UniverseSettingsTabFlaUITests() {
-        _app = FlauiApp.Launch(GetExePath());
+        var exePath = TestAppLauncher.GetExePath();
+        _app = FlauiApp.Launch(exePath);
         _automation = new UIA3Automation();
         _mainWindow = _app.GetMainWindow(_automation);
 
@@ -24,15 +22,11 @@ public class UniverseSettingsTabFlaUITests : IDisposable {
         _mainWindow.ActivateTab("SettingsTab", "Universum");
     }
 
-    private static string GetExePath() =>
-        Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, ExeRelativePath));
-
     public void Dispose() {
         _automation.Dispose();
         _app.Close();
     }
 
-    // Hilfsmethode: findet den ItemsControl für RaceSettings
     private AutomationElement[] GetRaceRows() {
         var rows = _mainWindow.GetDataItems("RaceSettingsItemsControl");
         return rows;
