@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using X3UR.UI.Models;
 
@@ -45,6 +47,10 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
             TotalSectorCount > 0 ? (float)TotalRaceSize / TotalSectorCount : 0;
 
         public ObservableCollection<RaceSettingModel> RaceSettings { get; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         public UniverseSettingsTabViewModel() {
             RaceSettings = [.. RaceDefinitions.All.Select(definition => {
@@ -94,8 +100,14 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void WidthTextBox_TargetUpdated(object sender, DataTransferEventArgs e) {
+            if (sender is TextBox tb
+             && tb.DataContext is UniverseSettingsTabViewModel vm) {
+                var clamped = vm.Width.ToString();
+                if (tb.Text != clamped) {
+                    tb.Text = clamped;
+                }
+            }
+        }
     }
 }

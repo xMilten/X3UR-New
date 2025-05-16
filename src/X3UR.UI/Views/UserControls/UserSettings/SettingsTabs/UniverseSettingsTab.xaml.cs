@@ -21,4 +21,8 @@ public partial class UniverseSettingsTab : UserControl {
     public UniverseSettingsTab() {
         InitializeComponent();
     }
+
+    private void TextBox_TargetUpdated(object sender, DataTransferEventArgs e) {
+
+    }
 }
