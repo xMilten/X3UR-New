@@ -14,6 +14,6 @@ public class MainWindowViewModel {
     }
 
     private void OnGenerate() {
-        // Hier später: Aufruf deines Generators mit SettingsVm.Width, SettingsVm.Height, SettingsVm.RaceSettings…
+        
     }
 }

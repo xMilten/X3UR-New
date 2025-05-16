@@ -1,5 +1,4 @@
-﻿using System.IO;
-using FlaUI.Core;
+﻿using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.UIA3;
 using X3UR.UI.FlaUI.Tests.Helpers;
@@ -28,7 +27,6 @@ public class UniverseSettingsTabFlaUITests : IDisposable {
         _app.Close();
     }
 
-    // Hilfsmethode: findet den ItemsControl für RaceSettings
     private AutomationElement[] GetRaceRows() {
         var rows = _mainWindow.GetDataItems("RaceSettingsItemsControl");
         return rows;
