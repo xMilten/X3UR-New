@@ -1,8 +1,5 @@
-﻿using System;
-using FlaUI.Core;
-using FlaUI.Core.AutomationElements;
+﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
-using FlaUI.UIA3;
 
 namespace X3UR.UI.FlaUI.Tests.Helpers {
     public static class AutomationExtensions {
@@ -14,16 +11,14 @@ namespace X3UR.UI.FlaUI.Tests.Helpers {
         /// <summary>
         /// Holt den n-ten Slider innerhalb einer Zeile (0‑basiert).
         /// </summary>
-        public static Slider FindSlider(this AutomationElement row, int index) {
-            return GetElementHelper(row, index, "Slider").AsSlider();
-        }
+        public static Slider FindSlider(this AutomationElement row, int index) =>
+            row.GetElementHelper(index, "Slider").AsSlider();
 
         /// <summary>
         /// Holt die n-te TextBox innerhalb einer Zeile (0‑basiert).
         /// </summary>
-        public static TextBox FindTextBox(this AutomationElement row, int index) {
-            return GetElementHelper(row, index, "TextBox").AsTextBox();
-        }
+        public static TextBox FindTextBox(this AutomationElement row, int index) =>
+            row.GetElementHelper(index, "TextBox").AsTextBox();
 
         private static AutomationElement GetElementHelper(this AutomationElement row, int index, string elementName) {
             var element = row.FindAllDescendants(cf => cf.ByControlType(namedControlTypes[elementName]));

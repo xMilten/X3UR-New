@@ -59,7 +59,7 @@
             </Grid.RowDefinitions>
 
             <!-- Map-Einstellungen -->
-            <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid Grid.Row="0" Margin="0,0,0,10" AutomationProperties.AutomationId="MapSettingsGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30"/>
                     <RowDefinition Height="30"/>
@@ -74,7 +74,7 @@
                 <!-- Karte -->
                 <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Karte"/>
                 <Label Grid.Row="0" Grid.Column="1" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" Content="Anzahl der möglichen Sektoren:"/>
-                <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="{Binding TotalSectorCount}" x:Name="TotalSectorCountLabel" AutomationProperties.AutomationId="TotalSectorCountLabel" />
+                <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource HeaderLabelStyle}" Content="{Binding TotalSectorCount}" />
 
                 <!-- Breite -->
                 <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Breite"/>
@@ -102,7 +102,7 @@
             </Grid>
 
             <!-- Rassentabelle -->
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}" x:Name="RaceSettingsItemsControl" AutomationProperties.AutomationId="RaceSettingsItemsControl" Focusable="False">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding RaceSettings}" ItemContainerStyle="{StaticResource ItemRowContainerStyle}" AutomationProperties.AutomationId="RaceSettingsItemsControl" Focusable="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Grid Height="30">

@@ -40,7 +40,7 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
         public short TotalSectorCount => (short)(Width * Height);
 
         // Summe aller vergebenen Sektoren
-        public short TotalRaceSize => (short)(RaceSettings.Sum(r => r.CurrentSize));
+        public short TotalRaceSize => (short)RaceSettings.Sum(r => r.CurrentSize);
         public float RaceSizePercentage =>
             TotalSectorCount > 0 ? (float)TotalRaceSize / TotalSectorCount : 0;
 

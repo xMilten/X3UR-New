@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              Height="Auto" Width="Auto">
     <Grid>
-        <TabControl x:Name="SettingsTab" AutomationProperties.AutomationId="SettingsTab" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <TabControl AutomationProperties.AutomationId="SettingsTab" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <TabItem Header="Universum">
                 <local:UniverseSettingsTab />
             </TabItem>
