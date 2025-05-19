@@ -24,6 +24,12 @@ namespace X3UR.UI.FlaUI.Tests.Helpers {
             GetElementHelper(row, (index * 2), ControlType.Text).AsLabel();
 
         /// <summary>
+        /// Holt die n-te Button innerhalb einer Zeile (0‑basiert).
+        /// </summary>
+        public static Button FindButton(this AutomationElement row, int index) =>
+            GetElementHelper(row, index, ControlType.Button).AsButton();
+
+        /// <summary>
         /// Holt die n-te CheckBox innerhalb einer Zeile (0‑basiert).
         /// </summary>
         public static CheckBox FindCheckBox(this AutomationElement row, int index) =>

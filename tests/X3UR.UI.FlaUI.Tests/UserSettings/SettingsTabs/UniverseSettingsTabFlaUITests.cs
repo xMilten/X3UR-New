@@ -4,17 +4,17 @@ using FlaUI.UIA3;
 using X3UR.UI.FlaUI.Tests.Helpers;
 using Xunit;
 
-using FlauiApp = FlaUI.Core.Application;
+using FlaUIApp = FlaUI.Core.Application;
 
 namespace X3UR.UI.FlaUI.Tests.UserSettings.SettingsTabs;
 public class UniverseSettingsTabFlaUITests : IDisposable {
-    private readonly FlauiApp _app;
+    private readonly FlaUIApp _app;
     private readonly AutomationBase _automation;
     private readonly Window _mainWindow;
 
     public UniverseSettingsTabFlaUITests() {
         var exePath = TestAppLauncher.GetExePath();
-        _app = FlauiApp.Launch(exePath);
+        _app = FlaUIApp.Launch(exePath);
         _automation = new UIA3Automation();
         _mainWindow = _app.GetMainWindow(_automation);
         // Sicherstellen, dass der „Universum“-Tab aktiv ist
