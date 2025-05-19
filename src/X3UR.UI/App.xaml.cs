@@ -1,19 +1,16 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using X3UR.UI.Bootstrap;
-using X3UR.UI.ViewModels;
 
 namespace X3UR.UI;
 public partial class App : System.Windows.Application {
     protected override void OnStartup(StartupEventArgs e) {
+        base.OnStartup(e);
         Bootstrapper.Initialize();
 
-        var mainVm = Bootstrapper.ServiceProvider.GetRequiredService<MainWindowViewModel>();
-        var mainWindow = new MainWindow {
-            DataContext = mainVm
-        };
+        var sp = Bootstrapper.ServiceProvider;
+        var mainWindow = sp.GetRequiredService<MainWindow>();
 
         mainWindow.Show();
-        base.OnStartup(e);
     }
 }

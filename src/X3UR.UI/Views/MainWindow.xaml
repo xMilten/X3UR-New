@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:X3UR.UI"
-        xmlns:userSettings="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
-        xmlns:visualUniverse="clr-namespace:X3UR.UI.Views.UserControls.VisualUniverse"
+        xmlns:us="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
+        xmlns:vu="clr-namespace:X3UR.UI.Views.UserControls.VisualUniverse"
+        DataContext="{Binding RelativeSource={RelativeSource Self}, Path=DataContext}"
         mc:Ignorable="d"
         Title="X3 - Universe Ranomizer"
         Height="1030"
@@ -17,7 +18,7 @@
             <ColumnDefinition Width="7*" />
         </Grid.ColumnDefinitions>
 
-        <userSettings:UserSettingsPanel AutomationProperties.AutomationId="UserSettingsPanel" Grid.Column="0" DataContext="{Binding SettingsVm}" />
-        <visualUniverse:VisualUniversePanel Grid.Column="1" />
+        <us:UserSettingsPanel AutomationProperties.AutomationId="UserSettingsPanel" Grid.Column="0" />
+        <vu:VisualUniversePanel Grid.Column="1" />
     </Grid>
 </Window>

@@ -4,8 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:X3UR.UI.Views.UserControls.UserSettings"
+             xmlns:vm="clr-namespace:X3UR.UI.ViewModels.UserSettings"
              mc:Ignorable="d" 
              Width="Auto" Height="24">
+
     <Grid Margin="0,0,5,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -16,21 +18,10 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0"
-               Content="Seed:"
-               VerticalAlignment="Center"
-               HorizontalAlignment="Left"
-               Padding="5,0" />
-
-        <TextBox Grid.Row="0" Grid.Column="1"
-                 VerticalAlignment="Stretch"
-                 HorizontalAlignment="Stretch"
-                 Margin="0,0,5,0"
-                 VerticalContentAlignment="Center"/>
-
-        <Button Grid.Row="0" Grid.Column="2"
-                VerticalAlignment="Stretch"
-                HorizontalAlignment="Right"
-                Width="24"/>
+        <Label Grid.Row="0" Grid.Column="0" Content="Seed:" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="5,0" />
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Seed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,5,0" VerticalContentAlignment="Center" />
+        <Button Grid.Row="0" Grid.Column="2" Command="{Binding GenerateSeedCommand}" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="24">
+            <Image Source="/Resources/rnd.png" Width="20" Height="20" />
+        </Button>
     </Grid>
 </UserControl>

@@ -1,0 +1,7 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <BitmapImage x:Key="SeedButtonIcon" UriSource="pack://application:,,,/X3UR.UI;component/Resources/rnd.png" />
+    <BitmapImage x:Key="InfoIcon" UriSource="pack://application:,,,/X3UR.UI;component/Resources/info.png" />
+    <BitmapImage x:Key="SectorIcon" UriSource="pack://application:,,,/X3UR.UI;component/Resources/sectorIcon.png" />
+</ResourceDictionary>

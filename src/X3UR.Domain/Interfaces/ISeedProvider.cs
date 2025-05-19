@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace X3UR.UI.ViewModels;
-internal class SeedViewModel {
+namespace X3UR.Domain.Interfaces;
+public interface ISeedProvider {
+    int GetSeed();
 }

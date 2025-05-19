@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\info.png" />
+    <None Remove="Resources\rnd.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5" />
   </ItemGroup>
 
@@ -16,6 +21,16 @@
     <ProjectReference Include="..\X3UR.Application\X3UR.Application.csproj" />
     <ProjectReference Include="..\X3UR.Domain\X3UR.Domain.csproj" />
     <ProjectReference Include="..\X3UR.Infrastructure\X3UR.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\info.png" />
+    <Resource Include="Resources\rnd.png" />
+    <Resource Include="Resources\sectorIcon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Themes\" />
   </ItemGroup>
 
 </Project>
