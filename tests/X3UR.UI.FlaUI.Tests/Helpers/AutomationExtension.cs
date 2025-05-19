@@ -1,44 +1,42 @@
 ﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
+using System.Runtime.CompilerServices;
+using Xunit;
 
 namespace X3UR.UI.FlaUI.Tests.Helpers {
     public static class AutomationExtensions {
-        private static readonly Dictionary<string, ControlType> namedControlTypes = new() {
-            {"Slider", ControlType.Slider},
-            {"TextBox", ControlType.Edit}
-        };
-
         /// <summary>
         /// Holt den n-ten Slider innerhalb einer Zeile (0‑basiert).
         /// </summary>
         public static Slider FindSlider(this AutomationElement row, int index) =>
-            row.GetElementHelper(index, "Slider").AsSlider();
+            GetElementHelper(row, index, ControlType.Slider).AsSlider();
 
         /// <summary>
         /// Holt die n-te TextBox innerhalb einer Zeile (0‑basiert).
         /// </summary>
         public static TextBox FindTextBox(this AutomationElement row, int index) =>
-            row.GetElementHelper(index, "TextBox").AsTextBox();
-
-        private static AutomationElement GetElementHelper(this AutomationElement row, int index, string elementName) {
-            var element = row.FindAllDescendants(cf => cf.ByControlType(namedControlTypes[elementName]));
-            if (index < 0 || index >= element.Length)
-                throw new IndexOutOfRangeException($"Kein {elementName} an Index {index} gefunden");
-            return element[index];
-        }
+            GetElementHelper(row, index, ControlType.Edit).AsTextBox();
 
         /// <summary>
-        /// Wartet, bis das Element klickbar ist (also gerendert und enabled).
+        /// Holt die n-te Label innerhalb einer Zeile (0‑basiert).
         /// </summary>
-        public static void EnsureClickable(this AutomationElement element, TimeSpan? timeout = null) {
-            var to = timeout ?? TimeSpan.FromSeconds(2);
-            var end = DateTime.Now + to;
-            while (DateTime.Now < end) {
-                if (element.IsEnabled)
-                    return;
-                Thread.Sleep(50);
-            }
-            throw new TimeoutException($"{element.Name}-Element nicht innerhalb von Frist klickbar.");
+        public static Label FindLabel(this AutomationElement row, int index) =>
+            GetElementHelper(row, (index * 2), ControlType.Text).AsLabel();
+
+        /// <summary>
+        /// Holt die n-te CheckBox innerhalb einer Zeile (0‑basiert).
+        /// </summary>
+        public static CheckBox FindCheckBox(this AutomationElement row, int index) =>
+            GetElementHelper(row, index, ControlType.CheckBox).AsCheckBox();
+
+        /// <summary>
+        /// Findet ein AutomationElement anhand seiner AutomationId.
+        /// </summary>
+        public static AutomationElement GetById(this Window window, string automationId) {
+            var element = window.FindFirstDescendant(cf => cf.ByAutomationId(automationId));
+            if (element == null)
+                throw new InvalidOperationException($"Element mit AutomationId='{automationId}' nicht gefunden");
+            return element;
         }
 
         /// <summary>
@@ -60,6 +58,52 @@ namespace X3UR.UI.FlaUI.Tests.Helpers {
             if (ctrl == null)
                 throw new InvalidOperationException($"ItemsControl '{itemsControlId}' nicht gefunden");
             return ctrl.FindAllDescendants(cf => cf.ByControlType(ControlType.DataItem));
+        }
+
+        /// <summary>
+        /// Schreibt erst einen Wert unter min, wartet auf Update, liest den aktuellen Text aus und gibt ihn zurück,
+        /// dann schreibt einen Wert über max, wartet nochmal und gibt den final eingestellten Wert zurück.
+        /// </summary>
+        public static (short lowClamped, short highClamped) ClampAndRead(this TextBox box, int min, int max) {
+            box.Text = (min - 1).ToString();
+            box.WaitUntilClickable();
+            short low = short.Parse(box.Text);
+
+            box.Text = (max + 1).ToString();
+            box.WaitUntilClickable();
+            short high = short.Parse(box.Text);
+
+            return (low, high);
+        }
+        
+        /// <summary>
+         /// Liest alle Slider-Werte (CurrentSize, CurrentClusters, CurrentClusterSize) aus einer Zeile.
+         /// </summary>
+        public static int[] ReadAllSliderValues(this AutomationElement row) {
+            var sliders = row
+                .FindAllDescendants(cf => cf.ByControlType(ControlType.Slider))
+                .Select(e => e.AsSlider().Value)
+                .Select(v => (int)v)
+                .ToArray();
+            return sliders;
+        }
+
+        /// <summary>
+        /// Liest alle TextBox-Werte (CurrentSize, CurrentClusters, CurrentClusterSize) aus einer Zeile.
+        /// </summary>
+        public static string[] ReadAllTextBoxValues(this AutomationElement row) {
+            var boxes = row
+                .FindAllDescendants(cf => cf.ByControlType(ControlType.Edit))
+                .Select(e => e.AsTextBox().Text)
+                .ToArray();
+            return boxes;
+        }
+
+        private static AutomationElement GetElementHelper(AutomationElement row, int index, ControlType type) {
+            var element = row.FindAllDescendants(cf => cf.ByControlType(type));
+            if (index < 0 || index >= element.Length)
+                throw new IndexOutOfRangeException($"Kein {type} an Index {index} gefunden");
+            return element[index];
         }
     }
 }

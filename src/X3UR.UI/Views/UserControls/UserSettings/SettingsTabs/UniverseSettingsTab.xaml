@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:viewModel="clr-namespace:X3UR.UI.ViewModels.UserSettings.SettingsTab"
+             xmlns:controls="clr-namespace:X3UR.UI.Controls"
              d:DataContext="{d:DesignInstance viewModel:UniverseSettingsTabViewModel}"
              mc:Ignorable="d"
              Height="Auto" Width="Auto">
@@ -48,8 +49,7 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
         <Grid Margin="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -59,7 +59,7 @@
             </Grid.RowDefinitions>
 
             <!-- Map-Einstellungen -->
-            <Grid Grid.Row="0" Margin="0,0,0,10" AutomationProperties.AutomationId="MapSettingsGrid">
+            <controls:ExposedGrid Grid.Row="0" Margin="0,0,0,10" AutomationProperties.AutomationId="MapSettingsGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30"/>
                     <RowDefinition Height="30"/>
@@ -85,7 +85,7 @@
                 <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource FormLabelStyle}" Content="Höhe"/>
                 <Slider Grid.Row="2" Grid.Column="1" Style="{StaticResource UniformSliderStyle}" Minimum="{Binding MinHeight}" Maximum="{Binding MaxHeight}" Value="{Binding Height, Mode=TwoWay}"/>
                 <TextBox Grid.Row="2" Grid.Column="2" Style="{StaticResource NumericTextBoxStyle}" Text="{Binding Height, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-            </Grid>
+            </controls:ExposedGrid>
 
             <!-- Header der Rassentabelle -->
             <Grid Grid.Row="1" Margin="0,0,0,2">
@@ -157,11 +157,11 @@
             </ItemsControl>
 
             <!-- Gesamtstatistik -->
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="2">
+            <controls:ExposedStackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="2" AutomationProperties.AutomationId="OverallStatistics">
                 <Label Content="Sektoren insgesamt:" Margin="2"/>
                 <Label Content="{Binding TotalRaceSize}" Margin="2" />
                 <Label Content="{Binding RaceSizePercentage}" ContentStringFormat="P2" Margin="2" />
-            </StackPanel>
+            </controls:ExposedStackPanel>
         </Grid>
     </ScrollViewer>
 </UserControl>

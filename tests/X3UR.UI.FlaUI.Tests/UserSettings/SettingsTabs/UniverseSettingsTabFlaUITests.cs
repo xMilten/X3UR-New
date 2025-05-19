@@ -17,7 +17,6 @@ public class UniverseSettingsTabFlaUITests : IDisposable {
         _app = FlauiApp.Launch(exePath);
         _automation = new UIA3Automation();
         _mainWindow = _app.GetMainWindow(_automation);
-
         // Sicherstellen, dass der „Universum“-Tab aktiv ist
         _mainWindow.ActivateTab("SettingsTab", "Universum");
     }
@@ -33,66 +32,83 @@ public class UniverseSettingsTabFlaUITests : IDisposable {
     }
 
     [Fact]
-    public void SizeSlider_ShouldHaveCorrectMinMax() {
-        var firstRow = GetRaceRows()[0];
-        var slider = firstRow.FindSlider(0);
+    public void MapSettings_AreCorrectlyInitializedAndBound() {
+        var mapGrid = _mainWindow.GetById("MapSettingsGrid");
+        var totalLabel = mapGrid.FindLabel(2);
+        var widthSlider = mapGrid.FindSlider(0);
+        var widthBox = mapGrid.FindTextBox(0);
+        var heightSlider = mapGrid.FindSlider(1);
+        var heightBox = mapGrid.FindTextBox(1);
 
-        Assert.Equal(0, slider.Minimum);
+        byte width = byte.Parse(widthBox.Text);
+        byte height = byte.Parse(heightBox.Text);
 
-        // Maximum = CurrentSize + remaining
-        // Lese initial CurrentSize aus TextBox
-        var sizeBox = firstRow.FindTextBox(0);
-        short initialSize = short.Parse(sizeBox.Text);
+        // 1) TotalSectorCount = Width * Height
+        Assert.Equal(width * height, short.Parse(totalLabel.Text));
 
-        // Lese Label TotalSectorCount
-        var totalLabel = _mainWindow.FindFirstDescendant(cf => cf.ByAutomationId("TotalSectorCountLabel")).AsLabel();
-        short total = short.Parse(totalLabel.Text);
+        // 2) Slider und TextBox synchronisiert
+        Assert.Equal(width, (byte)widthSlider.Value);
+        Assert.Equal(height, (byte)heightSlider.Value);
 
-        // Sum initial Sizes
-        firstRow.EnsureClickable();
-        short sumSizes = 0;
-        Console.WriteLine($"RaceRows: {GetRaceRows().Length}");
-        foreach (var row in GetRaceRows()) {
-            var txt = row.FindTextBox(0);
-            sumSizes += short.Parse(txt.Text);
-        }
-        short remaining = (short)(total - sumSizes + initialSize);
+        // 3) Eingabefelder clamped auf Min/Max
+        var (widthLow, widthHigh) = widthBox.ClampAndRead(5, 24);
+        var (heightLow, heightHigh) = heightBox.ClampAndRead(5, 20);
 
-        Assert.Equal(remaining, slider.Maximum);
+        Assert.Equal(5, widthLow);
+        Assert.Equal(24, widthHigh);
+
+        Assert.Equal(5, heightLow);
+        Assert.Equal(20, heightHigh);
     }
 
     [Fact]
-    public void SettingCurrentSizeToZero_ResetsClustersAndClusterSize() {
+    public void RaceTable_Activation_Deactivation_WorksAndBoundsAreRespected() {
         var firstRow = GetRaceRows()[0];
-        var sizeBox = firstRow.FindTextBox(0);
-        sizeBox.Text = "0";
-        firstRow.EnsureClickable();
+        var chk = firstRow.FindCheckBox(0);
 
-        // Finde ClusterCount Slider und ClusterSize Slider
-        var clustersSlider = firstRow.FindSlider(1);
-        var clusterSizeSlider = firstRow.FindSlider(2);
+        // speichere Standard-Werte
+        var defaultSliders = firstRow.ReadAllSliderValues();
+        var defaultsTexts = firstRow.ReadAllTextBoxValues();
 
-        Assert.Equal(0, clustersSlider.Value);
-        Assert.Equal(0, clusterSizeSlider.Value);
+        // deaktivieren -> alle auf 0
+        chk.IsChecked = false;
+        firstRow.WaitUntilClickable();
+
+        // auktuelle Werte auslesen
+        var currentSliders = firstRow.ReadAllSliderValues();
+        var currentTexts = firstRow.ReadAllTextBoxValues();
+
+        // 1) aktuelle Werte auf 0 überprüfen
+        Assert.All(currentSliders, v => Assert.Equal(0, v));
+        Assert.All(currentTexts, t => Assert.Equal("0", t));
+
+        // reaktivieren -> alle zurück auf Standard
+        chk.IsChecked = true;
+        firstRow.WaitUntilClickable();
+
+        // wiederhergestellte Werte auslesen
+        var restoredSliders = firstRow.ReadAllSliderValues();
+        var restoredTexts = firstRow.ReadAllTextBoxValues();
+
+        // 2) Standard-Werte mit wiederhergestellte Werte vergleichen
+        Assert.Equal(defaultSliders, restoredSliders);
+        Assert.Equal(defaultsTexts, restoredTexts);
     }
 
     [Fact]
-    public void IncreasingSizeFromZero_InitializesClustersAndClusterSizeToOne() {
-        var firstRow = GetRaceRows()[0];
-        var sizeBox = firstRow.FindTextBox(0);
+    public void OverallStatistics_AreCalculatedCorrectly() {
+        var mapGrid = _mainWindow.GetById("MapSettingsGrid");
+        var totalSectorCount = mapGrid.FindLabel(2);
+        int total = int.Parse(totalSectorCount.Text);
+        int sum = GetRaceRows().Sum(r => int.Parse(r.FindTextBox(0).Text));
+        var overallStats = _mainWindow.GetById("OverallStatistics");
+        int totalRaceSize = int.Parse(overallStats.FindLabel(1).Text);
+        float pct = float.Parse(overallStats.FindLabel(2).Text);
 
-        // Aktiviere erst 0
-        sizeBox.Text = "0";
-        firstRow.EnsureClickable();
+        // 1) Die Summe der Größe aller Rassen mit TotalSectorCount vergleichen
+        Assert.Equal(sum, totalRaceSize);
 
-        // Dann auf 5
-        sizeBox.Text = "5";
-        firstRow.EnsureClickable();
-
-        var clusterSlider = firstRow.FindSlider(1);
-        var clusterSizeSlider = firstRow.FindSlider(2);
-
-        Assert.Equal(1, clusterSlider.Value);
-        Assert.Equal(1, clusterSizeSlider.Value);
+        // 2) Die Summe der Größe aller Rassen als Faktor mit dem Faktor-Label vergleichen
+        Assert.Equal((float)sum / total, pct, 2);
     }
 }
