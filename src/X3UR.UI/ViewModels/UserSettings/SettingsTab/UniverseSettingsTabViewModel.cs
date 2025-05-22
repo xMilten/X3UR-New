@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using X3UR.Domain.DTOs;
 using X3UR.UI.Models;
 
 namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
@@ -95,6 +96,23 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
             foreach (RaceSettingModel race in RaceSettings) {
                 race.MaxSize = (short)(race.CurrentSize + remaining);
             }
+        }
+
+        public UniverseSettingsDto ToDto() {
+            return new UniverseSettingsDto {
+                Width = this.Width,
+                Height = this.Height,
+                RaceSettings = RaceSettings
+                .Select(r => new RaceSettingDto {
+                    Name = r.Name,
+                    ColorHex = (r.Color as SolidColorBrush)?.Color.ToString() ?? "#FFFFFF",
+                    CurrentSize = r.CurrentSize,
+                    CurrentClusters = r.CurrentClusters,
+                    CurrentClusterSize = r.CurrentClusterSize,
+                    IsActive = r.IsActive
+                })
+                .ToList()
+            };
         }
     }
 }

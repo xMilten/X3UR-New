@@ -5,5 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace X3UR.Domain.Models;
-internal class SectorObject {
+public class SectorObject {
+
 }

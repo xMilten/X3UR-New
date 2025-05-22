@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace X3UR.Domain.Interfaces;
-public interface ISeedProvider {
-    int GetSeed();
+public interface ISeedProvider : INotifyPropertyChanged {
+    long Seed { get; set; }
 }

@@ -6,12 +6,13 @@ using X3UR.Infrastructure.Commands;
 
 namespace X3UR.UI.ViewModels.UserSettings;
 public class SeedViewModel : INotifyPropertyChanged {
-    private string _seed;
+    private readonly ISeedProvider _seedProvider;
+
     public string Seed {
-        get => _seed;
+        get => _seedProvider.Seed.ToString();
         set {
-            if (_seed != value) {
-                _seed = value;
+            if (long.TryParse(value, out var seed)) {
+                _seedProvider.Seed = seed;
                 OnPropertyChanged();
             }
         }
@@ -20,9 +21,11 @@ public class SeedViewModel : INotifyPropertyChanged {
     public ICommand GenerateSeedCommand { get; }
 
     public SeedViewModel(ISeedProvider seedProvider) {
-        Seed = seedProvider.GetSeed().ToString();
+        Random rnd = new();
+        _seedProvider = seedProvider;
         GenerateSeedCommand = new RelayCommand(() => {
-            Seed = seedProvider.GetSeed().ToString();
+            _seedProvider.Seed = ((long)rnd.Next() << 32) | (uint)rnd.Next();
+            OnPropertyChanged(nameof(Seed));
         });
     }
 
