@@ -6,5 +6,7 @@ using System.Threading.Tasks;
 
 namespace X3UR.Domain.Models;
 public class Universe {
-
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public List<Sector> Sectors { get; } = new();
 }

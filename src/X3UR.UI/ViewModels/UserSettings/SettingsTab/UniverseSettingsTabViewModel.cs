@@ -100,6 +100,7 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
 
         public UniverseSettingsDto ToDto() {
             return new UniverseSettingsDto {
+                TotalSize = this.TotalSectorCount,
                 Width = this.Width,
                 Height = this.Height,
                 RaceSettings = RaceSettings

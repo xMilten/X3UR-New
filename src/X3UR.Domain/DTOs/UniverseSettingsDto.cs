@@ -2,12 +2,9 @@
 
 namespace X3UR.Domain.DTOs;
 public class UniverseSettingsDto {
-    public int Width { get; init; }
-    public int Height { get; init; }
-
-    /// <summary>
-    /// Für jede Rasse: Name, Color, CurrentSize, CurrentClusters, CurrentClusterSize, IsActive
-    /// </summary>
+    public short TotalSize { get; init; }
+    public byte Width { get; init; }
+    public byte Height { get; init; }
     public IReadOnlyList<RaceSettingDto> RaceSettings { get; init; }
 }
 

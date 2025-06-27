@@ -5,4 +5,5 @@ public interface IRandomProvider {
     int Next(int minValue, int maxValue);
     double NextDouble();
     void Reseed(long seed);
+    IEnumerable<T> Shuffle<T>(IEnumerable<T> source);
 }
