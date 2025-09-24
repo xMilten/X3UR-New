@@ -21,6 +21,10 @@ public class UniverseGenerator : IUniverseGenerator {
         _minDistSameRace = settings.TotalSize * (12.5f / 374);
         _minDistDiffRace = settings.TotalSize * (1.5f / 374);
 
+        // 1) Universum mit leeren Sektoren füllen?
+        // 2) Startpositionen der Cluster per Zufall bestimmen
+        // 3) Cluster wachsen lassen
+
         return _universe;
     }
 }
