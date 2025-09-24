@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Media;
 using X3UR.Domain.DTOs;
 using X3UR.UI.Models;
@@ -107,9 +108,9 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
                 .Select(r => new RaceSettingDto {
                     Name = r.Name,
                     ColorHex = (r.Color as SolidColorBrush)?.Color.ToString() ?? "#FFFFFF",
-                    CurrentSize = r.CurrentSize,
-                    CurrentClusters = r.CurrentClusters,
-                    CurrentClusterSize = r.CurrentClusterSize,
+                    MaxRaceSize = r.CurrentSize,
+                    MaxClusters = r.CurrentClusters,
+                    MaxClusterSize = r.CurrentClusterSize,
                     IsActive = r.IsActive
                 })
                 .ToList()

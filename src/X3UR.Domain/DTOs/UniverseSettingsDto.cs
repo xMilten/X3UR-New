@@ -11,8 +11,8 @@ public class UniverseSettingsDto {
 public class RaceSettingDto {
     public RaceNames Name { get; init; }
     public string ColorHex { get; init; }
-    public short CurrentSize { get; init; }
-    public short CurrentClusters { get; init; }
-    public short CurrentClusterSize { get; init; }
+    public short MaxRaceSize { get; init; }
+    public short MaxClusters { get; init; }
+    public short MaxClusterSize { get; init; }
     public bool IsActive { get; init; }
 }
