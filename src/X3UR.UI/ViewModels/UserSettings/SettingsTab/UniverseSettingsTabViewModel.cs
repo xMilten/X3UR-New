@@ -54,7 +54,8 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
 
         public UniverseSettingsTabViewModel() {
             RaceSettings = [.. RaceDefinitions.All.Select(definition => {
-                RaceSettingModel model = new() { Name = definition.Name,
+                RaceSettingModel model = new() {
+                    Name = definition.Name,
                     Color = new SolidColorBrush(definition.Color),
                     IsActive = definition.IsDefaultActive,
                     CurrentSize = definition.DefaultSize,
@@ -110,8 +111,7 @@ namespace X3UR.UI.ViewModels.UserSettings.SettingsTab {
                     ColorHex = (r.Color as SolidColorBrush)?.Color.ToString() ?? "#FFFFFF",
                     MaxRaceSize = r.CurrentSize,
                     MaxClusters = r.CurrentClusters,
-                    MaxClusterSize = r.CurrentClusterSize,
-                    IsActive = r.IsActive
+                    MaxClusterSize = r.CurrentClusterSize
                 })
                 .ToList()
             };

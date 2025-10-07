@@ -5,7 +5,7 @@ using X3UR.Domain.Models;
 namespace X3UR.Application.Generators;
 public class UniverseGenerator : IUniverseGenerator {
     private readonly IRandomProvider _rnd;
-    private readonly Universe _universe;
+    private Universe _universe;
     private UniverseSettingsDto _settings;
     private float _minDistSameRace;
     private float _minDistDiffRace;
@@ -15,7 +15,7 @@ public class UniverseGenerator : IUniverseGenerator {
     }
 
     public Universe Generate(UniverseSettingsDto settings) {
-        var universe = new Universe() { Width = settings.Width, Height = settings.Height };
+        _universe = new Universe() { Map = new Sector[settings.Height, settings.Width] };
         _settings = settings;
 
         _minDistSameRace = settings.TotalSize * (12.5f / 374);
