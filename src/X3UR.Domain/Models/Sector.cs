@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using X3UR.Domain.DTOs;
+using X3UR.Domain.Enums;
 
 namespace X3UR.Domain.Models;
 public class Sector {
@@ -12,15 +13,15 @@ public class Sector {
 
     public byte X { get; init; }
     public byte Y { get; init; }
-    public Cluster Cluster { get; internal set; }
-    public RaceSettingDto Race { get; internal set; }
+    public Cluster Cluster { get; private set; }
+    public RaceNames Race { get; private set; }
 
-    public void ClaimSector(Cluster cluster, RaceSettingDto race) {
+    public void Claim(Cluster cluster, RaceNames race) {
         Cluster = cluster;
         Race = race;
     }
 
-    public void AddFreeSpace(Sector sector) {
+    public void AddFreeSector(Sector sector) {
         _freeSpaces ??= new List<Sector>();
         _freeSpaces.Add(sector);
     }

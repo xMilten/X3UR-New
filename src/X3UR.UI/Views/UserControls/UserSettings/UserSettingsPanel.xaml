@@ -13,6 +13,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -22,5 +23,6 @@
         <local:SeedControl DataContext="{Binding SeedVm}" Grid.Row="0" Height="24" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="2" AutomationProperties.AutomationId="SeedControl" />
         <settingsTabs:SettingsTabControl DataContext="{Binding SettingsVm}" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2" />
         <local:SaveLoadControl Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="2" />
+        <Button Grid.Row="3" Height="20" Command="{Binding GenerateCommand}"/>
     </Grid>
 </UserControl>
