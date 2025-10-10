@@ -44,7 +44,10 @@ public class UniverseGenerator : IUniverseGenerator
     /// <param name="ct"></param>
     /// <returns></returns>
     public Task<Universe> GenerateAsync(UniverseSettingsDto settings, IProgress<double> progress = null, CancellationToken ct = default) {
-        _universe = new Universe() { Map = new Sector[settings.Height, settings.Width] };
+        _universe = new Universe() {
+            Map = new Sector[settings.Height, settings.Width],
+            Clusters = new List<Cluster>(settings.RaceSettings.Sum(r => r.MaxClusters))
+        };
         _settings = settings;
 
         _minDistSameRace = (int)Math.Round(settings.TotalSize * (12.5f / 374), MidpointRounding.AwayFromZero);
@@ -87,55 +90,77 @@ public class UniverseGenerator : IUniverseGenerator
 
     // Setzt die Startpositionen der Cluster im Universum.
     private void SetClusterStartPositions() {
-        Dictionary<RaceNames, int> raceClusterCounts = GetRaceClusterCounts();
-        List<RaceNames> racesInRound;
-        HashSet<SectorCoord> freeSectorCoords = new(GetAllFreeSectorCoords());
-        HashSet<SectorCoord> freeSectorCoordsWithCalcDistances;
-        Dictionary<RaceNames, List<SectorCoord>> clusterPositions_PerSameRaces = new();
-        List<SectorCoord> clusterPositions_SameRace;
-        Sector randomSector;
-        Cluster cluster;
-
-        foreach (RaceSettingDto raceSetting in _settings.RaceSettings) {
-            if (raceSetting.MaxClusters > 0)
-                clusterPositions_PerSameRaces.Add(raceSetting.Name, new List<SectorCoord>());
-        }
+        var raceClusterCounts = GetRaceClusterCounts();
+        var clusterPositions_PerSameRaces = InitClusterPositionsPerRace();
+        var freeSectorCoords = new HashSet<SectorCoord>(GetAllFreeSectorCoords());
 
         while (raceClusterCounts.Count > 0) {
-            racesInRound = raceClusterCounts.Keys.ToList();
-            racesInRound = _rnd.Shuffle(racesInRound).ToList();
+            var racesInRound = _rnd.Shuffle(raceClusterCounts.Keys).ToList();
 
             foreach (var raceName in racesInRound) {
-                clusterPositions_SameRace = clusterPositions_PerSameRaces[raceName];
-                freeSectorCoordsWithCalcDistances = new(freeSectorCoords);
-
-                foreach (SectorCoord coord in clusterPositions_SameRace) {
-                    RemoveSectorsInRadiusOfSameRace(freeSectorCoordsWithCalcDistances, raceName, coord);
-                }
-
-                randomSector = GetRandomFreeSector(freeSectorCoordsWithCalcDistances);
-                cluster = new Cluster() {
-                    X = randomSector.X,
-                    Y = randomSector.Y,
-                    Race = _settings.RaceSettings.First(r => r.Name == raceName)
-                };
-                randomSector.Claim(cluster, cluster.Race.Name);
-                AddAdjacentFreeSectorsToSector(randomSector);
-                cluster.Sectors.Add(randomSector);
-                AddClusterNeighborsInRange(cluster, 10);
-                _universe.Clusters.Add(cluster);
-                clusterPositions_SameRace.Add(new SectorCoord(randomSector.X, randomSector.Y));
-                freeSectorCoords.Remove(new SectorCoord(randomSector.X, randomSector.Y));
-                RemoveSectorsInRadiusOfDifferentRace(freeSectorCoords, new SectorCoord(randomSector.X, randomSector.Y));
-
-                raceClusterCounts[raceName]--;
-                if (raceClusterCounts[raceName] == 0) {
-                    raceClusterCounts.Remove(raceName);
-                }
+                PlaceClusterForRace(
+                    raceName,
+                    raceClusterCounts,
+                    clusterPositions_PerSameRaces,
+                    freeSectorCoords
+                );
             }
         }
 
         PrintClusterStartPositions();
+    }
+
+    private Dictionary<RaceNames, List<SectorCoord>> InitClusterPositionsPerRace() {
+        var dict = new Dictionary<RaceNames, List<SectorCoord>>();
+        foreach (var raceSetting in _settings.RaceSettings) {
+            if (raceSetting.MaxClusters > 0)
+                dict[raceSetting.Name] = new List<SectorCoord>(raceSetting.MaxClusters);
+        }
+        return dict;
+    }
+
+    private void PlaceClusterForRace(RaceNames raceName, Dictionary<RaceNames, int> raceClusterCounts, Dictionary<RaceNames, List<SectorCoord>> clusterPositions_PerSameRaces, HashSet<SectorCoord> freeSectorCoords) {
+        var clusterPositions_SameRace = clusterPositions_PerSameRaces[raceName];
+        var freeSectorCoordsWithCalcDistances = GetValidFreeSectorCoordsForRace(freeSectorCoords, clusterPositions_SameRace, raceName);
+
+        if (freeSectorCoordsWithCalcDistances.Count == 0)
+            return;
+
+        var randomSector = GetRandomFreeSector(freeSectorCoordsWithCalcDistances);
+        var cluster = new Cluster()
+        {
+            X = randomSector.X,
+            Y = randomSector.Y,
+            Race = _settings.RaceSettings.First(r => r.Name == raceName)
+        };
+        randomSector.Claim(cluster, cluster.Race.Name);
+        AddAdjacentFreeSectorsToSector(randomSector);
+        cluster.Sectors.Add(randomSector);
+        AddClusterNeighborsInRange(cluster, 10);
+        _universe.Clusters.Add(cluster);
+        clusterPositions_SameRace.Add(new SectorCoord(randomSector.X, randomSector.Y));
+        freeSectorCoords.Remove(new SectorCoord(randomSector.X, randomSector.Y));
+        RemoveSectorsInRadiusOfDifferentRace(freeSectorCoords, new SectorCoord(randomSector.X, randomSector.Y));
+
+        UpdateClusterCountForRace(raceName, raceClusterCounts);
+    }
+
+    private HashSet<SectorCoord> GetValidFreeSectorCoordsForRace(
+        HashSet<SectorCoord> freeSectorCoords,
+        List<SectorCoord> clusterPositions_SameRace,
+        RaceNames raceName)
+    {
+        var result = new HashSet<SectorCoord>(freeSectorCoords);
+        foreach (var coord in clusterPositions_SameRace)
+            RemoveSectorsInRadiusOfSameRace(result, raceName, coord);
+        return result;
+    }
+
+    private void UpdateClusterCountForRace(RaceNames raceName, Dictionary<RaceNames, int> raceClusterCounts)
+    {
+        raceClusterCounts[raceName]--;
+        if (raceClusterCounts[raceName] == 0)
+            raceClusterCounts.Remove(raceName);
     }
 
     // Wählt zufällig einen freien Sektor aus der Liste der freien Sektoren aus und entfernt diesen aus der Liste und gibt ihn zurück.
