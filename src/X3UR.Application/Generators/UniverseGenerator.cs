@@ -5,17 +5,44 @@ using X3UR.Domain.Interfaces;
 using X3UR.Domain.Models;
 
 namespace X3UR.Application.Generators;
-public class UniverseGenerator : IUniverseGenerator {
+public class UniverseGenerator : IUniverseGenerator
+{
     private readonly IRandomProvider _rnd;
     private Universe _universe;
     private UniverseSettingsDto _settings;
     private int _minDistSameRace;
     private int _minDistDiffRace;
 
+    // Nur für UniverseGenerator relevant
+    private readonly struct SectorCoord
+    {
+        public byte X { get; }
+        public byte Y { get; }
+
+        public SectorCoord(byte x, byte y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        // Optional: Equals/GetHashCode für HashSet-Nutzung
+        public override bool Equals(object obj) =>
+            obj is SectorCoord other && X == other.X && Y == other.Y;
+
+        public override int GetHashCode() => HashCode.Combine(X, Y);
+    }
+
     public UniverseGenerator(IRandomProvider rnd) {
         _rnd = rnd;
     }
 
+    /// <summary>
+    /// Erzeugt ein Universum anhand der übergebenen Einstellungen.
+    /// </summary>
+    /// <param name="settings"></param>
+    /// <param name="progress"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public Task<Universe> GenerateAsync(UniverseSettingsDto settings, IProgress<double> progress = null, CancellationToken ct = default) {
         _universe = new Universe() { Map = new Sector[settings.Height, settings.Width] };
         _settings = settings;
@@ -30,12 +57,14 @@ public class UniverseGenerator : IUniverseGenerator {
         return Task.FromResult(_universe);
     }
 
+    // Füllt das Universum mit leeren Sektoren.
     private void FillUniverseWihtSectors() {
         for (byte y = 0; y < _settings.Height; y++)
         for (byte x = 0; x < _settings.Width; x++)
             _universe.Map[y, x] = new Sector() { X = x, Y = y };
     }
 
+    // Gibt ein Dictionary mit den Rassen und der Anzahl der Cluster zurück, die jede Rasse haben soll.
     private Dictionary<RaceNames, int> GetRaceClusterCounts() {
         Dictionary<RaceNames, int> raceClusterCounts = new();
 
@@ -47,29 +76,29 @@ public class UniverseGenerator : IUniverseGenerator {
         return raceClusterCounts;
     }
 
-    private List<(byte x, byte y)> GetAllFreeSectorCoords() {
-        List<(byte x, byte y)> sectorCoords = new(_settings.TotalSize);
+    // Gibt eine Liste aller freien Sektoren im Universum zurück.
+    private List<SectorCoord> GetAllFreeSectorCoords() {
+        var sectorCoords = new List<SectorCoord>(_settings.TotalSize);
         for (byte y = 0; y < _settings.Height; y++)
-            for (byte x = 0; x < _settings.Width; x++) {
-                sectorCoords.Add((x, y));
-            }
-
+            for (byte x = 0; x < _settings.Width; x++)
+                sectorCoords.Add(new SectorCoord(x, y));
         return sectorCoords;
     }
 
+    // Setzt die Startpositionen der Cluster im Universum.
     private void SetClusterStartPositions() {
         Dictionary<RaceNames, int> raceClusterCounts = GetRaceClusterCounts();
         List<RaceNames> racesInRound;
-        List<(byte x, byte y)> freeSectorCoords = GetAllFreeSectorCoords();
-        List<(byte x, byte y)> freeSectorCoordsTemp;
-        Dictionary<RaceNames, List<(byte x, byte y)>> clusterPositions_PerSameRaces = new();
-        List<(byte x, byte y)> clusterPositions_SameRace;
+        HashSet<SectorCoord> freeSectorCoords = new(GetAllFreeSectorCoords());
+        HashSet<SectorCoord> freeSectorCoordsWithCalcDistances;
+        Dictionary<RaceNames, List<SectorCoord>> clusterPositions_PerSameRaces = new();
+        List<SectorCoord> clusterPositions_SameRace;
         Sector randomSector;
         Cluster cluster;
 
         foreach (RaceSettingDto raceSetting in _settings.RaceSettings) {
             if (raceSetting.MaxClusters > 0)
-                clusterPositions_PerSameRaces.Add(raceSetting.Name, new List<(byte x, byte y)>());
+                clusterPositions_PerSameRaces.Add(raceSetting.Name, new List<SectorCoord>());
         }
 
         while (raceClusterCounts.Count > 0) {
@@ -78,13 +107,13 @@ public class UniverseGenerator : IUniverseGenerator {
 
             foreach (var raceName in racesInRound) {
                 clusterPositions_SameRace = clusterPositions_PerSameRaces[raceName];
-                freeSectorCoordsTemp = new(freeSectorCoords);
+                freeSectorCoordsWithCalcDistances = new(freeSectorCoords);
 
-                foreach ((byte x, byte y) coord in clusterPositions_SameRace) {
-                    RemoveSectorsInRadiusOfSameRace(freeSectorCoordsTemp, raceName, coord);
+                foreach (SectorCoord coord in clusterPositions_SameRace) {
+                    RemoveSectorsInRadiusOfSameRace(freeSectorCoordsWithCalcDistances, raceName, coord);
                 }
 
-                randomSector = GetRandomFreeSector(freeSectorCoordsTemp);
+                randomSector = GetRandomFreeSector(freeSectorCoordsWithCalcDistances);
                 cluster = new Cluster() {
                     X = randomSector.X,
                     Y = randomSector.Y,
@@ -93,9 +122,11 @@ public class UniverseGenerator : IUniverseGenerator {
                 randomSector.Claim(cluster, cluster.Race.Name);
                 AddAdjacentFreeSectorsToSector(randomSector);
                 cluster.Sectors.Add(randomSector);
+                AddClusterNeighborsInRange(cluster, 10);
                 _universe.Clusters.Add(cluster);
-                clusterPositions_SameRace.Add((randomSector.X, randomSector.Y));
-                RemoveSectorsInRadiusOfDifferentRace(freeSectorCoords, (randomSector.X, randomSector.Y));
+                clusterPositions_SameRace.Add(new SectorCoord(randomSector.X, randomSector.Y));
+                freeSectorCoords.Remove(new SectorCoord(randomSector.X, randomSector.Y));
+                RemoveSectorsInRadiusOfDifferentRace(freeSectorCoords, new SectorCoord(randomSector.X, randomSector.Y));
 
                 raceClusterCounts[raceName]--;
                 if (raceClusterCounts[raceName] == 0) {
@@ -107,48 +138,44 @@ public class UniverseGenerator : IUniverseGenerator {
         PrintClusterStartPositions();
     }
 
-    private Sector GetRandomFreeSector(List<(byte x, byte y)> freeSectorCoords) {
-        int randomIndex = _rnd.Next(freeSectorCoords.Count);
-        (byte x, byte y) coord = freeSectorCoords[randomIndex];
-        freeSectorCoords[randomIndex] = freeSectorCoords[^1];
-        freeSectorCoords.RemoveAt(freeSectorCoords.Count - 1);
-        return _universe.Map[coord.y, coord.x];
+    // Wählt zufällig einen freien Sektor aus der Liste der freien Sektoren aus und entfernt diesen aus der Liste und gibt ihn zurück.
+    private Sector GetRandomFreeSector(HashSet<SectorCoord> freeSectorCoordsWithCalcDistances) {
+        int randomIndex = _rnd.Next(freeSectorCoordsWithCalcDistances.Count);
+        var coord = freeSectorCoordsWithCalcDistances.ElementAt(randomIndex);
+        freeSectorCoordsWithCalcDistances.Remove(coord);
+        return _universe.Map[coord.Y, coord.X];
     }
 
-    private void RemoveSectorsInRadiusOfSameRace(List<(byte x, byte y)> freeSectorCoordsTemp, RaceNames raceName, (byte x, byte y) coord) {
-        int dx;
-        int dy;
-        int distanceSquared;
+    // Entfernt alle Sektoren im angegebenen Radius des Koordinatenpunktes, aus dem HashSet der freien Sektoren.
+    // Der Radius hängt von der Anzahl der Cluster dieser Rasse ab.
+    private void RemoveSectorsInRadiusOfSameRace(HashSet<SectorCoord> freeSectorCoordsWithCalcDistances, RaceNames raceName, SectorCoord coord) {
         int maxClusters = _settings.RaceSettings.First(r => r.Name == raceName).MaxClusters;
         int minDistance = (int)Math.Round(2.0 / maxClusters * _minDistSameRace, MidpointRounding.AwayFromZero);
 
-        for (int i = 0; i < freeSectorCoordsTemp.Count; i++) {
-            dx = freeSectorCoordsTemp[i].x - coord.x;
-            dy = freeSectorCoordsTemp[i].y - coord.y;
-            distanceSquared = dx * dx + dy * dy;
-
-            if (distanceSquared < minDistance) {
-                freeSectorCoordsTemp.RemoveAt(i);
-                i--;
-            }
+        var toRemove = new List<SectorCoord>();
+        foreach (var sector in freeSectorCoordsWithCalcDistances) {
+            int dx = sector.X - coord.X;
+            int dy = sector.Y - coord.Y;
+            int distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared < minDistance)
+                toRemove.Add(sector);
         }
+        foreach (var sector in toRemove)
+            freeSectorCoordsWithCalcDistances.Remove(sector);
     }
 
-    private void RemoveSectorsInRadiusOfDifferentRace(List<(byte x, byte y)> freeSectorCoords, (byte x, byte y) coord) {
-        int dx;
-        int dy;
-        int distanceSquared;
-
-        for (int i = 0; i < freeSectorCoords.Count; i++) {
-            dx = freeSectorCoords[i].x - coord.x;
-            dy = freeSectorCoords[i].y - coord.y;
-            distanceSquared = dx * dx + dy * dy;
-
-            if (distanceSquared < _minDistDiffRace) {
-                freeSectorCoords.RemoveAt(i);
-                i--;
-            }
+    // Entfernt alle Sektoren im angegebenen Radius des Koordinatenpunktes, aus dem HashSet der freien Sektoren.
+    private void RemoveSectorsInRadiusOfDifferentRace(HashSet<SectorCoord> freeSectorCoords, SectorCoord coord) {
+        var toRemove = new List<SectorCoord>();
+        foreach (var sector in freeSectorCoords) {
+            int dx = sector.X - coord.X;
+            int dy = sector.Y - coord.Y;
+            int distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared < _minDistDiffRace)
+                toRemove.Add(sector);
         }
+        foreach (var sector in toRemove)
+            freeSectorCoords.Remove(sector);
     }
 
     // Fügt nur Horizontal und Vertikal angrenzende freie Sektoren zur FreeSpaces-Liste des Sektors hinzu
@@ -156,6 +183,7 @@ public class UniverseGenerator : IUniverseGenerator {
     private void AddAdjacentFreeSectorsToSector(Sector sector) {
         int x = sector.X;
         int y = sector.Y;
+
         if (x > 0) {
             Sector leftSector = _universe.Map[y, x - 1];
             if (leftSector.Cluster == null) {
@@ -187,9 +215,10 @@ public class UniverseGenerator : IUniverseGenerator {
     }
 
 
-    // Zeigt eine 2D-Matrix mit den Startpositionen der Cluster im Debug an
+    // Zeigt eine 2D-Matrix mit den Startpositionen der Cluster und die Anzahl der Cluster an.
     private void PrintClusterStartPositions() {
         int clusterCount = 0;
+
         for (byte y = 0; y < _settings.Height; y++) {
             for (byte x = 0; x < _settings.Width; x++) {
                 Sector sector = _universe.Map[y, x];
@@ -203,5 +232,26 @@ public class UniverseGenerator : IUniverseGenerator {
             Debug.WriteLine("");
         }
         Debug.WriteLine($"Anzahl Cluster: {clusterCount}");
+    }
+
+    // Fügt alle Cluster des Universums, die im angegebenen Bereich des Clusters liegen, als Nachbarn hinzu.
+    private void AddClusterNeighborsInRange(Cluster cluster, int range) {
+        if (_universe.Clusters.Count < 2) return;
+        int rangeSquared = range * range;
+        int dx;
+        int dy;
+        int distanceSquared;
+
+        foreach (var otherCluster in _universe.Clusters) {
+            if (otherCluster == cluster)
+                continue;
+            dx = otherCluster.X - cluster.X;
+            dy = otherCluster.Y - cluster.Y;
+            distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared <= rangeSquared) {
+                cluster.AddNeighbor(otherCluster);
+                otherCluster.AddNeighbor(cluster);
+            }
+        }
     }
 }

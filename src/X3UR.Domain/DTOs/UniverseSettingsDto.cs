@@ -11,10 +11,10 @@ public class UniverseSettingsDto {
 public class RaceSettingDto {
     public RaceNames Name { get; init; }
     public string ColorHex { get; init; }
-    public short CurrentRaceSize { get; set; }
+    public short CurrentRaceSize { get; set; } = 0;
     public short MaxRaceSize { get; init; }
-    public short CurrentClusters { get; set; }
+    public short CurrentClusters { get; set; } = 0;
     public short MaxClusters { get; init; }
-    public short CurrentClusterSize { get; set; }
+    public short CurrentClusterSize { get; set; } = 0;
     public short MaxClusterSize { get; init; }
 }
