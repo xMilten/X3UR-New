@@ -3,24 +3,22 @@ using X3UR.Domain.DTOs;
 using X3UR.Domain.Enums;
 using X3UR.Domain.Interfaces;
 using X3UR.Domain.Models;
+using X3UR.Domain.Utilities;
 
 namespace X3UR.Application.Generators;
 public class UniverseGenerator : IUniverseGenerator {
     private readonly IRandomProvider _rnd;
+
     private Universe _universe;
     private UniverseSettingsDto _settings;
+    private Dictionary<RaceNames, RaceSettingDto> _raceSettingsByName;
+    private Dictionary<RaceNames, int> _raceSizes;
     private int _minDistSameRace;
     private int _minDistDiffRace;
 
     // Nur für UniverseGenerator relevant
-    private readonly struct SectorCoord(byte x, byte y) {
-        public byte X { get; } = x;
-        public byte Y { get; } = y;
-    }
-
-    public UniverseGenerator(IRandomProvider rnd) {
-        _rnd = rnd;
-    }
+    private readonly record struct SectorCoord(byte X, byte Y);
+    public UniverseGenerator(IRandomProvider rnd) => _rnd = rnd;
 
     /// <summary>
     /// Erzeugt ein Universum anhand der übergebenen Einstellungen.
@@ -28,30 +26,20 @@ public class UniverseGenerator : IUniverseGenerator {
     /// <param name="settings"></param>
     /// <param name="progress"></param>
     /// <param name="ct"></param>
-    /// <returns></returns>
     public Task<Universe> GenerateAsync(UniverseSettingsDto settings, IProgress<double> progress = null, CancellationToken ct = default) {
-        _universe = new Universe() {
-            Map = new Sector[settings.Height, settings.Width],
-            Clusters = new List<Cluster>(settings.RaceSettings.Sum(r => r.MaxClusters))
-        };
         _settings = settings;
+        _raceSettingsByName = _settings.RaceSettings.ToDictionary(r => r.Name);
+        _raceSizes = _settings.RaceSettings.ToDictionary(r => r.Name, _ => 0);
+        _universe = new Universe(settings);
 
         _minDistSameRace = (int)Math.Round(settings.TotalSize * (12.5f / 374), MidpointRounding.AwayFromZero);
         _minDistDiffRace = (int)Math.Round(settings.TotalSize * (1.5f / 374), MidpointRounding.AwayFromZero);
 
-        FillUniverseWihtSectors();
         SetClusterStartPositions();
         SortAllClusterNeighborsDesc();
-        // 4) Cluster wachsen lassen
+        GrowClusters();
 
         return Task.FromResult(_universe);
-    }
-
-    // Füllt das Universum mit leeren Sektoren.
-    private void FillUniverseWihtSectors() {
-        for (byte y = 0; y < _settings.Height; y++)
-        for (byte x = 0; x < _settings.Width; x++)
-            _universe.Map[y, x] = new Sector() { X = x, Y = y };
     }
 
     // Setzt die Startpositionen der Cluster im Universum.
@@ -88,13 +76,11 @@ public class UniverseGenerator : IUniverseGenerator {
         var cluster = new Cluster() {
             X = randomSector.X,
             Y = randomSector.Y,
-            Race = _settings.RaceSettings.First(r => r.Name == raceName)
+            Race = _raceSettingsByName[raceName]
         };
-        randomSector.Claim(cluster, cluster.Race.Name);
-        AddAdjacentFreeSectorsToSector(randomSector);
+        _universe.AddCluster(cluster);
         cluster.AddSector(randomSector);
-        AddClusterNeighborsInRange(cluster, 10);
-        _universe.Clusters.Add(cluster);
+        _raceSizes[raceName]++;
         clusterPositions_SameRace.Add(new SectorCoord(randomSector.X, randomSector.Y));
         freeSectorCoords.Remove(new SectorCoord(randomSector.X, randomSector.Y));
         RemoveSectorsInRadiusOfDifferentRace(freeSectorCoords, new SectorCoord(randomSector.X, randomSector.Y));
@@ -102,6 +88,12 @@ public class UniverseGenerator : IUniverseGenerator {
         UpdateClusterCountForRace(raceName, raceClusterCounts);
     }
 
+    private void SortAllClusterNeighborsDesc() {
+        foreach (Cluster cluster in _universe.Clusters)
+            cluster.SortNeighborsDesc();
+    }
+
+    // Lässt alle Cluster im Universum wachsen.
     private void GrowClusters() {
         var raceClusters = GetRaceClusters();
 
@@ -109,46 +101,88 @@ public class UniverseGenerator : IUniverseGenerator {
             var racesInRound = _rnd.Shuffle(raceClusters.Keys).ToList();
 
             foreach (var raceName in racesInRound) {
-                Cluster cluster = raceClusters[raceName][_rnd.Next(raceClusters[raceName].Count)];
-                Sector growableSector;
-                Sector claimableFreeSpace;
-
-                if (cluster.HasNeighbors()) {
-                    growableSector = cluster.GetBestGrowableSectorTowardsNeighbor();
-                    claimableFreeSpace = growableSector.GetBestFreeSectorTowardsNeighbor();
-                } else {
-                    growableSector = cluster.GetRandomGrowableSector(_rnd);
-                    claimableFreeSpace = growableSector.GetRandomFreeSector(_rnd);
+                if (!raceClusters.TryGetValue(raceName, out var clusters) || clusters.Count == 0) {
+                    raceClusters.Remove(raceName);
+                    continue;
                 }
 
-                claimableFreeSpace.Claim(cluster, cluster.Race.Name);
-                AddAdjacentFreeSectorsToSector(claimableFreeSpace);
-                claimableFreeSpace.RemoveAllClaimersFromMeAndMeFromThem();
+                var raceSetting = _raceSettingsByName[raceName];
+
+                if (_raceSizes[raceName] >= raceSetting.MaxRaceSize) {
+                    raceClusters.Remove(raceName);
+                    continue;
+                }
+
+                // Wähle zufälligen Cluster per Index; vermeide O(n) Remove(cluster)
+                int idx = _rnd.Next(clusters.Count);
+                Cluster cluster = clusters[idx];
+
+                if (!cluster.CanGrow()) {
+                    clusters.RemoveAt(idx);
+                    if (clusters.Count == 0)
+                        raceClusters.Remove(raceName);
+                    continue;
+                }
+
+                Sector growableSector;
+                Sector freeSector;
+
+                if (cluster.HasNeighbors()) {
+                    growableSector = cluster.GetGrowableSectorTowardsNeighbor();
+                    freeSector = growableSector?.GetFreeSectorTowardsNeighbor();
+                } else {
+                    growableSector = cluster.GetRandomGrowableSector(_rnd);
+                    freeSector = growableSector?.GetRandomFreeSector(_rnd);
+                }
+
+                // Falls irgendwo null (z.B. durch Kettenreaktion), entferne den Cluster aus der Liste und fahre fort
+                if (growableSector == null || freeSector == null) {
+                    // Entferne das spezifische Element effizient
+                    // Falls sich Index geändert hat, sichere Fallback: RemoveAll auf CanGrow()
+                    if (idx >= 0 && idx < clusters.Count && clusters[idx] == cluster)
+                        clusters.RemoveAt(idx);
+                    else
+                        clusters.RemoveAll(c => !c.CanGrow());
+                    if (clusters.Count == 0)
+                        raceClusters.Remove(raceName);
+                    continue;
+                }
+
+                _universe.ClaimAndExpand(freeSector, cluster);
+                _raceSizes[raceName]++;
+
+                // Nur die betroffene Rasse bereinigen (Clusters, die nicht mehr wachsen können)
+                clusters.RemoveAll(c => !c.CanGrow());
+
+                if (clusters.Count == 0 || _raceSizes[raceName] >= raceSetting.MaxRaceSize)
+                    raceClusters.Remove(raceName);
             }
         }
+
+        PrintClusterStartPositions();
     }
 
     // Zeigt eine 2D-Matrix mit den Startpositionen der Cluster und die Anzahl der Cluster an.
     private void PrintClusterStartPositions() {
         int clusterCount = 0;
-        string ClusterNeighbors = "";
+        string clusterNeighbors = "";
 
         for (byte y = 0; y < _settings.Height; y++) {
             for (byte x = 0; x < _settings.Width; x++) {
-                Sector sector = _universe.Map[y, x];
+                Sector sector = _universe.GetSector(x, y);
                 if (sector.Cluster != null) {
-                    Debug.Write("O");
-                    ClusterNeighbors += $"Cluster at ({sector.X},{sector.Y}) has {(sector.Cluster.HasNeighbors() ? $"{sector.Cluster.GetNeighborCount()} neighbors" : "no neighbors")}\n";
+                    Debug.Write(Enum.GetName(typeof(RaceCharakters), sector.Race));
+                    clusterNeighbors += $"Cluster at ({sector.X},{sector.Y}) has {(sector.Cluster.HasNeighbors() ? $"{sector.Cluster.GetNeighborCount()} neighbors" : "no neighbors")}\n";
                     clusterCount++;
                 } else {
-                    Debug.Write("X");
+                    Debug.Write(" ");
                 }
             }
             Debug.WriteLine("");
         }
         Debug.WriteLine($"Anzahl Cluster: {clusterCount}");
         Debug.WriteLine($"Anzahl Cluster laut Universum: {_universe.Clusters.Count}");
-        Debug.WriteLine(ClusterNeighbors);
+        Debug.WriteLine(clusterNeighbors);
     }
 
     // ----- Hilfsmethoden -----------------------------------------------------------------------------------
@@ -198,21 +232,23 @@ public class UniverseGenerator : IUniverseGenerator {
 
     // Wählt zufällig einen freien Sektor aus der Liste der freien Sektoren aus und entfernt diesen aus der Liste und gibt ihn zurück.
     private Sector GetRandomFreeSector(HashSet<SectorCoord> freeSectorCoordsWithCalcDistances) {
-        int randomIndex = _rnd.Next(freeSectorCoordsWithCalcDistances.Count);
-        var coord = freeSectorCoordsWithCalcDistances.ElementAt(randomIndex);
+        // Convert to list once for O(1) random access
+        var list = freeSectorCoordsWithCalcDistances.ToList();
+        int randomIndex = _rnd.Next(list.Count);
+        var coord = list[randomIndex];
         freeSectorCoordsWithCalcDistances.Remove(coord);
-        return _universe.Map[coord.Y, coord.X];
+        return _universe.GetSector(coord.X, coord.Y);
     }
 
     // Entfernt alle Sektoren im angegebenen Radius des Koordinatenpunktes, aus dem HashSet der freien Sektoren.
     // Der Radius hängt von der Anzahl der Cluster dieser Rasse ab.
     private void RemoveSectorsInRadiusOfSameRace(HashSet<SectorCoord> freeSectorCoordsWithCalcDistances, RaceNames raceName, SectorCoord sectorCoord) {
-        int maxClusters = _settings.RaceSettings.First(r => r.Name == raceName).MaxClusters;
+        int maxClusters = _raceSettingsByName[raceName].MaxClusters;
         int minDistance = (int)Math.Round(2.0 / maxClusters * _minDistSameRace, MidpointRounding.AwayFromZero);
         var toRemove = new List<SectorCoord>();
 
         foreach (var freeSectorCoord in freeSectorCoordsWithCalcDistances) {
-            int distanceSquared = GetdistanceSquared(freeSectorCoord, sectorCoord);
+            int distanceSquared = DistanceHelper.DistanceSquared(freeSectorCoord.X, freeSectorCoord.Y, sectorCoord.X, sectorCoord.Y);
 
             if (distanceSquared < minDistance)
                 toRemove.Add(freeSectorCoord);
@@ -226,7 +262,7 @@ public class UniverseGenerator : IUniverseGenerator {
         var toRemove = new List<SectorCoord>();
 
         foreach (var freeSectorCoord in freeSectorCoords) {
-            int distanceSquared = GetdistanceSquared(freeSectorCoord, sectorCoord);
+            int distanceSquared = DistanceHelper.DistanceSquared(freeSectorCoord.X, freeSectorCoord.Y, sectorCoord.X, sectorCoord.Y);
 
             if (distanceSquared < _minDistDiffRace)
                 toRemove.Add(freeSectorCoord);
@@ -235,82 +271,20 @@ public class UniverseGenerator : IUniverseGenerator {
             freeSectorCoords.Remove(sector);
     }
 
-    private int GetdistanceSquared(SectorCoord a, SectorCoord b) {
-        int dx = a.X - b.X;
-        int dy = a.Y - b.Y;
-        return dx * dx + dy * dy;
-    }
-
-    private int GetdistanceSquared(Cluster clusterA, Cluster clusterB) {
-        int dx = clusterA.X - clusterB.X;
-        int dy = clusterA.Y - clusterB.Y;
-        return dx * dx + dy * dy;
-    }
-
-    // Fügt nur Horizontal und Vertikal angrenzende freie Sektoren zur FreeSpaces-Liste des Sektors hinzu
-    // und fügt den Sektor zur Claimer-Liste der angrenzenden freien Sektoren hinzu.
-    private void AddAdjacentFreeSectorsToSector(Sector sector) {
-        int x = sector.X;
-        int y = sector.Y;
-
-        if (x > 0) {
-            Sector leftSector = _universe.Map[y, x - 1];
-            if (leftSector.Cluster == null) {
-                sector.AddFreeSector(leftSector);
-                leftSector.AddClaimer(sector);
-            }
-        }
-        if (x < _settings.Width - 1) {
-            Sector rightSector = _universe.Map[y, x + 1];
-            if (rightSector.Cluster == null) {
-                sector.AddFreeSector(rightSector);
-                rightSector.AddClaimer(sector);
-            }
-        }
-        if (y > 0) {
-            Sector topSector = _universe.Map[y - 1, x];
-            if (topSector.Cluster == null) {
-                sector.AddFreeSector(topSector);
-                topSector.AddClaimer(sector);
-            }
-        }
-        if (y < _settings.Height - 1) {
-            Sector bottomSector = _universe.Map[y + 1, x];
-            if (bottomSector.Cluster == null) {
-                sector.AddFreeSector(bottomSector);
-                bottomSector.AddClaimer(sector);
-            }
-        }
-    }
-
-    // Fügt alle Cluster des Universums, die im angegebenen Bereich des Clusters liegen, als Nachbarn hinzu.
-    private void AddClusterNeighborsInRange(Cluster cluster, int range) {
-        if (_universe.Clusters.Count < 2) return;
-
-        int rangeSquared = range * range;
-        int distanceSquared;
-
-        foreach (var otherCluster in _universe.Clusters) {
-            if (otherCluster == cluster) continue;
-
-            distanceSquared = GetdistanceSquared(otherCluster, cluster);
-
-            if (distanceSquared <= rangeSquared) {
-                cluster.AddNeighbor(otherCluster);
-                otherCluster.AddNeighbor(cluster);
-            }
-        }
-    }
-
-    private void SortAllClusterNeighborsDesc() {
-        foreach (var cluster in _universe.Clusters)
-            cluster.SortNeighborsDesc();
-    }
-
+    /// <summary>
+    /// Get all race clusters that can still grow.
+    /// Sorted by race name.
+    /// </summary>
     private Dictionary<RaceNames, List<Cluster>> GetRaceClusters() {
         Dictionary<RaceNames, List<Cluster>> raceClusters = new();
 
         foreach (Cluster cluster in _universe.Clusters) {
+            RaceNames raceName = cluster.Race.Name;
+
+            // Skip clusters that cannot grow anymore due to race size limit reached
+            if (_raceSizes[raceName] >= cluster.Race.MaxRaceSize) continue;
+
+            // Skip clusters that cannot grow anymore due to cluster size limit reached
             if (!cluster.CanGrow()) continue;
 
             if (!raceClusters.TryGetValue(cluster.Race.Name, out var list)) {
@@ -324,13 +298,18 @@ public class UniverseGenerator : IUniverseGenerator {
         return raceClusters;
     }
 
-    // Lässt den angegebenen Sektor in Richtung des nächstgelegenen Nachbarclusters wachsen.
-    private void GrowSectorToNextClusterNeighbor(Sector sector) {
-        Cluster sectorCluster = sector.Cluster;
-
-        if (sectorCluster.HasNeighbors()) {
-            Cluster closestNeighborCluster = sectorCluster.GetClosestNeighborCluster();
-            int distanceSquared = GetdistanceSquared(sectorCluster, closestNeighborCluster);
-        }
+    public enum RaceCharakters : byte {
+        None,
+        A = 1,
+        B = 2,
+        S = 3,
+        P = 4,
+        T = 5,
+        X = 6,
+        K = 7,
+        p = 8,
+        U = 14,
+        t = 17,
+        Y = 19
     }
 }
