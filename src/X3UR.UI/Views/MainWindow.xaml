@@ -19,6 +19,6 @@
         </Grid.ColumnDefinitions>
 
         <us:UserSettingsPanel AutomationProperties.AutomationId="UserSettingsPanel" Grid.Column="0" />
-        <vu:VisualUniversePanel Grid.Column="1" />
+        <vu:VisualUniversePanel x:Name="VisualUniverse" AutomationProperties.AutomationId="VisualUniversePanel" Grid.Column="1" />
     </Grid>
 </Window>

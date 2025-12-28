@@ -9,5 +9,5 @@ public interface IUniverseGenerator {
     /// <summary>
     /// Erzeugt ein Universum nach den übergebenen Einstellungen.
     /// </summary>
-    Universe Generate(UniverseSettingsDto settings);
+    Task<Universe> GenerateAsync(Universe universe, UniverseSettingsDto settings);
 }

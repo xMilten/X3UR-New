@@ -21,12 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Generators\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\X3UR.Application\X3UR.Application.csproj" />
+    <ProjectReference Include="..\..\src\X3UR.Infrastructure\X3UR.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -6,8 +6,7 @@ public class RandomProvider : IRandomProvider {
 
     public RandomProvider(ISeedProvider seedProvider) {
         _rnd = CreateRandomFromSeed(seedProvider.Seed);
-        seedProvider.PropertyChanged += (_, e) =>
-        {
+        seedProvider.PropertyChanged += (_, e) => {
             if (e.PropertyName == nameof(seedProvider.Seed))
                 _rnd = CreateRandomFromSeed(seedProvider.Seed);
         };
