@@ -21,6 +21,8 @@ public class Cluster {
         _neighbors = null;
     }
 
+    public IReadOnlyList<Sector> GetSectors() => _sectors.AsReadOnly();
+
     public void AddGrowableSector(Sector sector) {
         ArgumentNullException.ThrowIfNull(sector);
         _growableSectors ??= ListPool<Sector>.Rent();

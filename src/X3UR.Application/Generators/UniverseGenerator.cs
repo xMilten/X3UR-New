@@ -24,13 +24,11 @@ public class UniverseGenerator : IUniverseGenerator {
     /// Erzeugt ein Universum anhand der übergebenen Einstellungen.
     /// </summary>
     /// <param name="settings"></param>
-    /// <param name="progress"></param>
-    /// <param name="ct"></param>
-    public Task<Universe> GenerateAsync(UniverseSettingsDto settings, IProgress<double> progress = null, CancellationToken ct = default) {
+    public Task<Universe> GenerateAsync(Universe universe, UniverseSettingsDto settings) {
+        _universe = universe;
         _settings = settings;
         _raceSettingsByName = _settings.RaceSettings.ToDictionary(r => r.Name);
         _raceSizes = _settings.RaceSettings.ToDictionary(r => r.Name, _ => 0);
-        _universe = new Universe(settings);
 
         _minDistSameRace = (int)Math.Round(settings.TotalSize * (12.5f / 374), MidpointRounding.AwayFromZero);
         _minDistDiffRace = (int)Math.Round(settings.TotalSize * (1.5f / 374), MidpointRounding.AwayFromZero);
@@ -93,7 +91,7 @@ public class UniverseGenerator : IUniverseGenerator {
             cluster.SortNeighborsDesc();
     }
 
-    // Lässt alle Cluster im Universum wachsen.
+    // Lässt alle Cluster im Universum wachsen (Orchestrierung über alle Rassen).
     private void GrowClusters() {
         var raceClusters = GetRaceClusters();
 
@@ -107,59 +105,70 @@ public class UniverseGenerator : IUniverseGenerator {
                 }
 
                 var raceSetting = _raceSettingsByName[raceName];
-
                 if (_raceSizes[raceName] >= raceSetting.MaxRaceSize) {
                     raceClusters.Remove(raceName);
                     continue;
                 }
 
-                // Wähle zufälligen Cluster per Index; vermeide O(n) Remove(cluster)
-                int idx = _rnd.Next(clusters.Count);
-                Cluster cluster = clusters[idx];
+                GrowClustersForRace(raceName, clusters, raceClusters);
 
-                if (!cluster.CanGrow()) {
-                    clusters.RemoveAt(idx);
-                    if (clusters.Count == 0)
-                        raceClusters.Remove(raceName);
-                    continue;
-                }
-
-                Sector growableSector;
-                Sector freeSector;
-
-                if (cluster.HasNeighbors()) {
-                    growableSector = cluster.GetGrowableSectorTowardsNeighbor();
-                    freeSector = growableSector?.GetFreeSectorTowardsNeighbor();
-                } else {
-                    growableSector = cluster.GetRandomGrowableSector(_rnd);
-                    freeSector = growableSector?.GetRandomFreeSector(_rnd);
-                }
-
-                // Falls irgendwo null (z.B. durch Kettenreaktion), entferne den Cluster aus der Liste und fahre fort
-                if (growableSector == null || freeSector == null) {
-                    // Entferne das spezifische Element effizient
-                    // Falls sich Index geändert hat, sichere Fallback: RemoveAll auf CanGrow()
-                    if (idx >= 0 && idx < clusters.Count && clusters[idx] == cluster)
-                        clusters.RemoveAt(idx);
-                    else
-                        clusters.RemoveAll(c => !c.CanGrow());
-                    if (clusters.Count == 0)
-                        raceClusters.Remove(raceName);
-                    continue;
-                }
-
-                _universe.ClaimAndExpand(freeSector, cluster);
-                _raceSizes[raceName]++;
-
-                // Nur die betroffene Rasse bereinigen (Clusters, die nicht mehr wachsen können)
-                clusters.RemoveAll(c => !c.CanGrow());
-
-                if (clusters.Count == 0 || _raceSizes[raceName] >= raceSetting.MaxRaceSize)
+                if (!raceClusters.TryGetValue(raceName, out var remaining) || remaining.Count == 0
+                    || _raceSizes[raceName] >= raceSetting.MaxRaceSize) {
                     raceClusters.Remove(raceName);
+                }
             }
         }
 
         PrintClusterStartPositions();
+    }
+
+    // Führt einen Wachstums-Schritt für eine Rasse aus: wählt einen zufälligen Cluster und expandiert ihn.
+    private void GrowClustersForRace(RaceNames raceName, List<Cluster> clusters, Dictionary<RaceNames, List<Cluster>> raceClusters) {
+        var raceSetting = _raceSettingsByName[raceName];
+
+        if (_raceSizes[raceName] >= raceSetting.MaxRaceSize) {
+            raceClusters.Remove(raceName);
+            return;
+        }
+
+        int idx = _rnd.Next(clusters.Count);
+        Cluster cluster = clusters[idx];
+
+        if (!cluster.CanGrow()) {
+            clusters.RemoveAt(idx);
+            if (clusters.Count == 0)
+                raceClusters.Remove(raceName);
+            return;
+        }
+
+        Sector growableSector;
+        Sector freeSector;
+
+        if (cluster.HasNeighbors()) {
+            growableSector = cluster.GetGrowableSectorTowardsNeighbor();
+            freeSector = growableSector?.GetFreeSectorTowardsNeighbor();
+        } else {
+            growableSector = cluster.GetRandomGrowableSector(_rnd);
+            freeSector = growableSector?.GetRandomFreeSector(_rnd);
+        }
+
+        if (growableSector == null || freeSector == null) {
+            if (idx >= 0 && idx < clusters.Count && clusters[idx] == cluster)
+                clusters.RemoveAt(idx);
+            else
+                clusters.RemoveAll(c => !c.CanGrow());
+            if (clusters.Count == 0)
+                raceClusters.Remove(raceName);
+            return;
+        }
+
+        _universe.ClaimAndExpand(freeSector, cluster);
+        _raceSizes[raceName]++;
+
+        clusters.RemoveAll(c => !c.CanGrow());
+
+        if (clusters.Count == 0 || _raceSizes[raceName] >= raceSetting.MaxRaceSize)
+            raceClusters.Remove(raceName);
     }
 
     // Zeigt eine 2D-Matrix mit den Startpositionen der Cluster und die Anzahl der Cluster an.
@@ -167,8 +176,8 @@ public class UniverseGenerator : IUniverseGenerator {
         int clusterCount = 0;
         string clusterNeighbors = "";
 
-        for (byte y = 0; y < _settings.Height; y++) {
-            for (byte x = 0; x < _settings.Width; x++) {
+        for (byte y = 0; y < _universe.Height; y++) {
+            for (byte x = 0; x < _universe.Width; x++) {
                 Sector sector = _universe.GetSector(x, y);
                 if (sector.Cluster != null) {
                     Debug.Write(Enum.GetName(typeof(RaceCharakters), sector.Race));

@@ -14,6 +14,8 @@ public class Universe {
     public short Width => (short)_map.GetLength(1);
     public short Height => (short)_map.GetLength(0);
 
+    public event Action<Cluster>? ClusterAdded;
+
     /// <summary>
     /// Erstellt ein neues Universum anhand der übergebenen Einstellungen.
     /// </summary>
@@ -47,6 +49,8 @@ public class Universe {
         Clusters.Add(cluster);
         RegisterClusterNeighborsInRange(cluster, neighborRange);
         cluster.SectorAdded += OnClusterSectorAdded;
+
+        ClusterAdded?.Invoke(cluster);
     }
 
     private void OnClusterSectorAdded(Sector sector) {

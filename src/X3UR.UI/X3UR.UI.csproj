@@ -26,7 +26,7 @@
   <ItemGroup>
     <Resource Include="Resources\info.png" />
     <Resource Include="Resources\rnd.png" />
-    <Resource Include="Resources\sectorIcon.png" />
+    <Resource Include="Assets\sectorIcon.png" />
   </ItemGroup>
 
   <ItemGroup>
